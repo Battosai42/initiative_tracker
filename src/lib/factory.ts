@@ -60,6 +60,15 @@ export function createCombatant(partial: Partial<Combatant> = {}): Combatant {
     structure: track(0),
     heat: 0,
     pilotHits: 0,
+    ac: 0,
+    eac: 0,
+    kac: 0,
+    dr: 0,
+    sr: 0,
+    fort: 0,
+    reflex: 0,
+    con: 0,
+    regen: 0,
     ...partial,
   };
 }
@@ -118,6 +127,15 @@ export function combatantToTemplate(combatant: Combatant): CombatantTemplate {
     resolve: combatant.resolve,
     armor: combatant.armor.max,
     structure: combatant.structure.max,
+    ac: combatant.ac,
+    eac: combatant.eac,
+    kac: combatant.kac,
+    dr: combatant.dr,
+    sr: combatant.sr,
+    fort: combatant.fort,
+    reflex: combatant.reflex,
+    con: combatant.con,
+    regen: combatant.regen,
   };
 }
 
@@ -239,6 +257,15 @@ export function normalizeTemplate(value: unknown): CombatantTemplate | null {
     resolve: Math.max(0, Math.round(num(raw.resolve, 0))),
     armor: Math.max(0, Math.round(num(raw.armor, 0))),
     structure: Math.max(0, Math.round(num(raw.structure, 0))),
+    ac: Math.max(0, Math.round(num(raw.ac, 0))),
+    eac: Math.max(0, Math.round(num(raw.eac, 0))),
+    kac: Math.max(0, Math.round(num(raw.kac, 0))),
+    dr: Math.max(0, Math.round(num(raw.dr, 0))),
+    sr: Math.max(0, Math.round(num(raw.sr, 0))),
+    fort: Math.round(num(raw.fort, 0)),
+    reflex: Math.round(num(raw.reflex, 0)),
+    con: Math.round(num(raw.con, 0)),
+    regen: Math.max(0, Math.round(num(raw.regen, 0))),
   };
 }
 
@@ -276,6 +303,15 @@ export function normalizeCombatant(value: unknown, remapIds = false): Combatant 
     structure: normTrack(raw.structure, 0),
     heat: Math.max(0, Math.round(num(raw.heat, 0))),
     pilotHits: Math.max(0, Math.min(6, Math.round(num(raw.pilotHits, 0)))),
+    ac: Math.max(0, Math.round(num(raw.ac, 0))),
+    eac: Math.max(0, Math.round(num(raw.eac, 0))),
+    kac: Math.max(0, Math.round(num(raw.kac, 0))),
+    dr: Math.max(0, Math.round(num(raw.dr, 0))),
+    sr: Math.max(0, Math.round(num(raw.sr, 0))),
+    fort: Math.round(num(raw.fort, 0)),
+    reflex: Math.round(num(raw.reflex, 0)),
+    con: Math.round(num(raw.con, 0)),
+    regen: Math.max(0, Math.round(num(raw.regen, 0))),
   };
 }
 

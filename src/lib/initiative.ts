@@ -1,4 +1,5 @@
 import type { Combatant, Encounter } from '../types';
+import { applyRegeneration } from './hp';
 import { rollInitiativeScore, type Rng } from './dice';
 
 function initiativeValue(combatant: Combatant): number {
@@ -47,6 +48,22 @@ function newRound(encounter: Encounter): Encounter {
     round: encounter.round + 1,
     combatants: tickConditions(encounter.combatants),
     updatedAt: Date.now(),
+  };
+}
+
+/**
+ * When a creature with HP regeneration begins its turn it heals `regen` HP up to
+ * its max. Applied on turn advancement only (not on manual activation) so a
+ * monster regenerates exactly once per turn, at the start of its turn.
+ */
+function applyTurnRegeneration(encounter: Encounter, combatantId: string): Encounter {
+  const target = encounter.combatants.find((entry) => entry.id === combatantId);
+  if (!target || target.regen <= 0) return encounter;
+  return {
+    ...encounter,
+    combatants: encounter.combatants.map((entry) =>
+      entry.id === combatantId ? applyRegeneration(entry) : entry,
+    ),
   };
 }
 
@@ -101,19 +118,19 @@ export function nextTurn(encounter: Encounter, rng?: Rng): Encounter {
 
   const index = order.findIndex((combatant) => combatant.id === encounter.activeId);
   if (index === -1) {
-    return { ...encounter, activeId: order[0].id, updatedAt: Date.now() };
+    const regenerated = applyTurnRegeneration(encounter, order[0].id);
+    return { ...regenerated, activeId: order[0].id, updatedAt: Date.now() };
   }
 
   if (index === order.length - 1) {
-    const next = newRound(encounter);
-    return { ...next, activeId: order[0].id };
+    const advanced = newRound(encounter);
+    const regenerated = applyTurnRegeneration(advanced, order[0].id);
+    return { ...regenerated, activeId: order[0].id };
   }
 
-  return {
-    ...encounter,
-    activeId: order[index + 1].id,
-    updatedAt: Date.now(),
-  };
+  const nextActive = order[index + 1];
+  const regenerated = applyTurnRegeneration(encounter, nextActive.id);
+  return { ...regenerated, activeId: nextActive.id, updatedAt: Date.now() };
 }
 
 export function previousTurn(encounter: Encounter): Encounter {

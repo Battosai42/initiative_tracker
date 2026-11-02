@@ -59,6 +59,27 @@ describe('turn advancement', () => {
     expect(encounter.round).toBe(2);
   });
 
+  it('applies HP regeneration when a monster begins its turn', () => {
+    const regenerator = createCombatant({ name: 'Regen', initiative: 20, hp: track(10, 2), regen: 4 });
+    const slow = createCombatant({ name: 'Slow', initiative: 5 });
+    let encounter = withCombatants(createEncounter('starfinder1e'), slow, regenerator);
+    encounter = { ...encounter, activeId: slow.id };
+
+    encounter = nextTurn(encounter);
+    expect(encounter.activeId).toBe(regenerator.id);
+    expect(encounter.combatants.find((entry) => entry.id === regenerator.id)?.hp.current).toBe(6);
+  });
+
+  it('does not regenerate while another combatant is active', () => {
+    const regenerator = createCombatant({ name: 'Regen', initiative: 20, hp: track(10, 2), regen: 4 });
+    const slow = createCombatant({ name: 'Slow', initiative: 5 });
+    let encounter = withCombatants(createEncounter('starfinder1e'), regenerator, slow);
+    // Regenerator is active; advancing to Slow must not heal it.
+    encounter = nextTurn(encounter);
+    expect(encounter.activeId).toBe(slow.id);
+    expect(encounter.combatants.find((entry) => entry.id === regenerator.id)?.hp.current).toBe(2);
+  });
+
   it('ticks timed conditions when a round ends', () => {
     const a = createCombatant({
       name: 'A',

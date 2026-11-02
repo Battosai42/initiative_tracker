@@ -1415,6 +1415,57 @@ button.disposition-tag:hover {
 }
 
 /* ------------------------------------------------------------------ */
+/* Armor class (D&D AC, Starfinder EAC/KAC)                           */
+/* ------------------------------------------------------------------ */
+
+.ac-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 9px;
+}
+
+.ac-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+  padding: 3px 6px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.ac-cell .mini-label {
+  margin-bottom: 2px;
+}
+
+.ac-input {
+  width: 54px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: center;
+  font-family: ui-monospace, 'SF Mono', 'Cascadia Code', monospace;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.1;
+}
+
+.ac-input::-webkit-outer-spin-button,
+.ac-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.ac-input[type='number'] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* ------------------------------------------------------------------ */
 /* Expanded card                                                      */
 /* ------------------------------------------------------------------ */
 

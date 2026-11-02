@@ -14,6 +14,15 @@ const aria: CombatantTemplate = {
   resolve: 3,
   armor: 0,
   structure: 0,
+  ac: 12,
+  eac: 0,
+  kac: 0,
+  dr: 0,
+  sr: 0,
+  fort: 0,
+  reflex: 0,
+  con: 0,
+  regen: 0,
 };
 
 const goblin: CombatantTemplate = {
@@ -28,6 +37,15 @@ const goblin: CombatantTemplate = {
   resolve: 0,
   armor: 0,
   structure: 0,
+  ac: 10,
+  eac: 0,
+  kac: 0,
+  dr: 0,
+  sr: 0,
+  fort: 0,
+  reflex: 0,
+  con: 0,
+  regen: 0,
 };
 
 describe('parsePcs', () => {

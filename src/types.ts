@@ -40,6 +40,15 @@ export interface CombatantTemplate {
   resolve: number;
   armor: number;
   structure: number;
+  ac: number;
+  eac: number;
+  kac: number;
+  dr: number;
+  sr: number;
+  fort: number;
+  reflex: number;
+  con: number;
+  regen: number;
 }
 
 export interface Combatant {
@@ -52,6 +61,12 @@ export interface Combatant {
   initiative: number | null;
   initMod: number;
   tiebreak: number;
+  /** D&D Armor Class. */
+  ac: number;
+  /** Starfinder Energy Armor Class. */
+  eac: number;
+  /** Starfinder Kinetic Armor Class. */
+  kac: number;
   hp: Track;
   secondary: Track;
   resolve: number;
@@ -68,6 +83,14 @@ export interface Combatant {
   structure: Track;
   heat: number;
   pilotHits: number;
+  /** Starfinder: damage reduction, spell resistance and saving throws. */
+  dr: number;
+  sr: number;
+  fort: number;
+  reflex: number;
+  con: number;
+  /** Starfinder: monsters heal this much HP at the start of their turn. */
+  regen: number;
 }
 
 export interface Encounter {

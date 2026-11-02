@@ -20,6 +20,9 @@ describe('combatantToTemplate', () => {
       resolve: 3,
       armor: { current: 0, max: 10, temp: 0 },
       structure: { current: 0, max: 5, temp: 0 },
+      ac: 15,
+      eac: 12,
+      kac: 14,
     });
     expect(combatantToTemplate(combatant)).toEqual<CombatantTemplate>({
       name: 'Goblin',
@@ -33,7 +36,102 @@ describe('combatantToTemplate', () => {
       resolve: 3,
       armor: 10,
       structure: 5,
+      ac: 15,
+      eac: 12,
+      kac: 14,
+      dr: 0,
+      sr: 0,
+      fort: 0,
+      reflex: 0,
+      con: 0,
+      regen: 0,
     });
+  });
+});
+
+describe('combatant AC fields', () => {
+  it('defaults AC/EAC/KAC to zero', () => {
+    const combatant = createCombatant({ name: 'Draft' });
+    expect(combatant.ac).toBe(0);
+    expect(combatant.eac).toBe(0);
+    expect(combatant.kac).toBe(0);
+  });
+
+  it('rounds and clamps negative armor class values on load', () => {
+    const data = normalizeAppData(
+      {
+        encounters: [
+          {
+            name: 'A',
+            system: 'dnd5e',
+            combatants: [{ name: 'Knight', ac: 18, eac: 15, kac: -3 }],
+          },
+        ],
+      },
+      true,
+    );
+    const knight = data?.encounters[0].combatants[0];
+    expect(knight?.ac).toBe(18);
+    expect(knight?.eac).toBe(15);
+    expect(knight?.kac).toBe(0);
+  });
+});
+
+describe('combatant Starfinder stats', () => {
+  it('captures DR, SR, saving throws and regen in the template', () => {
+    const monster = createCombatant({
+      name: 'Ogre',
+      role: 'monster',
+      dr: 5,
+      sr: 15,
+      fort: 7,
+      reflex: -2,
+      con: 3,
+      regen: 5,
+    });
+    const template = combatantToTemplate(monster);
+    expect(template).toMatchObject({
+      dr: 5,
+      sr: 15,
+      fort: 7,
+      reflex: -2,
+      con: 3,
+      regen: 5,
+    });
+  });
+
+  it('defaults the extra stats to zero', () => {
+    const combatant = createCombatant({ name: 'Draft' });
+    expect(combatant.dr).toBe(0);
+    expect(combatant.sr).toBe(0);
+    expect(combatant.fort).toBe(0);
+    expect(combatant.reflex).toBe(0);
+    expect(combatant.con).toBe(0);
+    expect(combatant.regen).toBe(0);
+  });
+
+  it('clamps negative DR/SR/regen and rounds saving throws on load', () => {
+    const data = normalizeAppData(
+      {
+        encounters: [
+          {
+            name: 'A',
+            system: 'starfinder1e',
+            combatants: [
+              { name: 'Dragon', dr: -1, sr: -4, regen: -2, fort: 4.4, reflex: -1.6, con: 2.5 },
+            ],
+          },
+        ],
+      },
+      true,
+    );
+    const dragon = data?.encounters[0].combatants[0];
+    expect(dragon?.dr).toBe(0);
+    expect(dragon?.sr).toBe(0);
+    expect(dragon?.regen).toBe(0);
+    expect(dragon?.fort).toBe(4);
+    expect(dragon?.reflex).toBe(-2);
+    expect(dragon?.con).toBe(3);
   });
 });
 
@@ -57,6 +155,15 @@ describe('normalizeAppData templates', () => {
         resolve: 3,
         armor: 0,
         structure: 0,
+        ac: 12,
+        eac: 0,
+        kac: 0,
+        dr: 0,
+        sr: 0,
+        fort: 0,
+        reflex: 0,
+        con: 0,
+        regen: 0,
       },
     ];
     const data = normalizeAppData({ encounters: [{ name: 'A' }], templates }, true);

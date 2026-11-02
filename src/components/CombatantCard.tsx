@@ -58,6 +58,52 @@ function Pips({ label, value, max, tone, onChange }: PipsProps) {
   );
 }
 
+interface AcStatProps {
+  label: string;
+  value: number;
+  onChange: (value: number) => void;
+}
+
+/** A compact, editable Armor Class cell (single AC for D&D, EAC/KAC for Starfinder). */
+function AcStat({ label, value, onChange }: AcStatProps) {
+  const [draft, setDraft] = useState(String(value));
+
+  useEffect(() => setDraft(String(value)), [value]);
+
+  const commit = () => {
+    const parsed = Number.parseInt(draft, 10);
+    if (!Number.isFinite(parsed)) {
+      setDraft(String(value));
+      return;
+    }
+    const next = Math.max(0, Math.round(parsed));
+    setDraft(String(next));
+    if (next !== value) onChange(next);
+  };
+
+  return (
+    <div className="ac-cell">
+      <span className="mini-label">{label}</span>
+      <input
+        className="ac-input"
+        type="number"
+        min={0}
+        value={draft}
+        onChange={(event) => setDraft(event.target.value)}
+        onBlur={commit}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') event.currentTarget.blur();
+          if (event.key === 'Escape') {
+            setDraft(String(value));
+            event.currentTarget.blur();
+          }
+        }}
+        aria-label={`${label} value`}
+      />
+    </div>
+  );
+}
+
 export function CombatantCard({ combatant }: { combatant: Combatant }) {
   const {
     system,
@@ -411,9 +457,34 @@ export function CombatantCard({ combatant }: { combatant: Combatant }) {
             </div>
           </>
         ) : (
-          <div className="track-pair">
-            <TrackRow
-              label={system.primaryLabel}
+          <>
+            {(system.id === 'dnd5e' || system.id === 'starfinder1e') ? (
+              <div className="ac-row">
+                {system.id === 'dnd5e' ? (
+                  <AcStat
+                    label="AC"
+                    value={combatant.ac}
+                    onChange={(next) => updateCombatant(combatant.id, { ac: next })}
+                  />
+                ) : (
+                  <>
+                    <AcStat
+                      label="EAC"
+                      value={combatant.eac}
+                      onChange={(next) => updateCombatant(combatant.id, { eac: next })}
+                    />
+                    <AcStat
+                      label="KAC"
+                      value={combatant.kac}
+                      onChange={(next) => updateCombatant(combatant.id, { kac: next })}
+                    />
+                  </>
+                )}
+              </div>
+            ) : null}
+            <div className="track-pair">
+              <TrackRow
+                label={system.primaryLabel}
               track={combatant.hp}
               tone="hp"
               showTemp={system.showTempHp}
@@ -444,6 +515,7 @@ export function CombatantCard({ combatant }: { combatant: Combatant }) {
               />
             ) : null}
           </div>
+          </>
         )}
       </div>
 
@@ -536,6 +608,68 @@ export function CombatantCard({ combatant }: { combatant: Combatant }) {
                     />
                   </label>
                 </div>
+              ) : null}
+
+              {system.id === 'starfinder1e' ? (
+                <>
+                  <div className="mini-grid">
+                    <label className="mini-field">
+                      DR
+                      <CommitNumberInput
+                        min={0}
+                        value={combatant.dr}
+                        label="Damage reduction"
+                        onCommit={(value) => updateCombatant(combatant.id, { dr: value })}
+                      />
+                    </label>
+                    <label className="mini-field">
+                      SR
+                      <CommitNumberInput
+                        min={0}
+                        value={combatant.sr}
+                        label="Spell resistance"
+                        onCommit={(value) => updateCombatant(combatant.id, { sr: value })}
+                      />
+                    </label>
+                  </div>
+                  <div className="mini-grid">
+                    <label className="mini-field">
+                      Fort
+                      <CommitNumberInput
+                        value={combatant.fort}
+                        label="Fortitude save"
+                        onCommit={(value) => updateCombatant(combatant.id, { fort: value })}
+                      />
+                    </label>
+                    <label className="mini-field">
+                      Reflex
+                      <CommitNumberInput
+                        value={combatant.reflex}
+                        label="Reflex save"
+                        onCommit={(value) => updateCombatant(combatant.id, { reflex: value })}
+                      />
+                    </label>
+                    <label className="mini-field">
+                      Con
+                      <CommitNumberInput
+                        value={combatant.con}
+                        label="Constitution save"
+                        onCommit={(value) => updateCombatant(combatant.id, { con: value })}
+                      />
+                    </label>
+                  </div>
+                  {combatant.role === 'monster' ? (
+                    <label className="mini-field">
+                      HP Regen
+                      <CommitNumberInput
+                        min={0}
+                        value={combatant.regen}
+                        label="HP regeneration"
+                        onCommit={(value) => updateCombatant(combatant.id, { regen: value })}
+                      />
+                    </label>
+                  ) : null}
+                </>
               ) : null}
 
               {isBt ? (

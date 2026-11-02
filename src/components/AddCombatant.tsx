@@ -51,6 +51,15 @@ export function AddCombatant() {
   const [resolve, setResolve] = useState('3');
   const [armor, setArmor] = useState('10');
   const [structure, setStructure] = useState('5');
+  const [ac, setAc] = useState('10');
+  const [eac, setEac] = useState('10');
+  const [kac, setKac] = useState('10');
+  const [dr, setDr] = useState('0');
+  const [sr, setSr] = useState('0');
+  const [fort, setFort] = useState('0');
+  const [reflex, setReflex] = useState('0');
+  const [con, setCon] = useState('0');
+  const [regen, setRegen] = useState('0');
   const [quantity, setQuantity] = useState('1');
   const nameRef = useRef<HTMLInputElement>(null);
 
@@ -64,6 +73,12 @@ export function AddCombatant() {
     } else if (system.id === 'starfinder1e') {
       setHpMax('10');
       setSecondaryMax('10');
+      setDr('0');
+      setSr('0');
+      setFort('0');
+      setReflex('0');
+      setCon('0');
+      setRegen('0');
     } else {
       setSecondaryMax('5');
     }
@@ -72,6 +87,9 @@ export function AddCombatant() {
       setStructure('5');
       setSide((current) => (current === 'Players' || !current ? 'OpFor' : current));
     }
+    setAc('10');
+    setEac('10');
+    setKac('10');
   }, [system.id, isBt]);
 
   useEffect(() => {
@@ -104,6 +122,15 @@ export function AddCombatant() {
     setResolve(String(template.resolve));
     setArmor(String(template.armor));
     setStructure(String(template.structure));
+    setAc(String(template.ac));
+    setEac(String(template.eac));
+    setKac(String(template.kac));
+    setDr(String(template.dr));
+    setSr(String(template.sr));
+    setFort(String(template.fort));
+    setReflex(String(template.reflex));
+    setCon(String(template.con));
+    setRegen(String(template.regen));
     setQuantity('1');
   }, []);
 
@@ -120,6 +147,15 @@ export function AddCombatant() {
     const resolveValue = Math.max(0, toInt(resolve, 0));
     const armorValue = Math.max(0, toInt(armor, 0));
     const structureValue = Math.max(0, toInt(structure, 0));
+    const acValue = Math.max(0, toInt(ac, 0));
+    const eacValue = Math.max(0, toInt(eac, 0));
+    const kacValue = Math.max(0, toInt(kac, 0));
+    const drValue = Math.max(0, toInt(dr, 0));
+    const srValue = Math.max(0, toInt(sr, 0));
+    const fortValue = toInt(fort, 0);
+    const reflexValue = toInt(reflex, 0);
+    const conValue = toInt(con, 0);
+    const regenValue = Math.max(0, toInt(regen, 0));
 
     const drafts = Array.from({ length: count }, (_, index) => {
       const displayName = count > 1 ? `${baseName} ${index + 1}` : baseName;
@@ -144,6 +180,15 @@ export function AddCombatant() {
         resolve: system.showResolve ? resolveValue : 0,
         armor: track(isBt ? armorValue : 0),
         structure: track(isBt ? structureValue : 0),
+        ac: acValue,
+        eac: eacValue,
+        kac: kacValue,
+        dr: drValue,
+        sr: srValue,
+        fort: fortValue,
+        reflex: reflexValue,
+        con: conValue,
+        regen: regenValue,
       };
     });
 
@@ -159,6 +204,15 @@ export function AddCombatant() {
       resolve: resolveValue,
       armor: armorValue,
       structure: structureValue,
+      ac: acValue,
+      eac: eacValue,
+      kac: kacValue,
+      dr: drValue,
+      sr: srValue,
+      fort: fortValue,
+      reflex: reflexValue,
+      con: conValue,
+      regen: regenValue,
     };
 
     addCombatants(drafts, template);
@@ -355,6 +409,112 @@ export function AddCombatant() {
                     onChange={(event) => setResolve(event.target.value)}
                   />
                 </div>
+              ) : null}
+
+              {system.id === 'dnd5e' ? (
+                <div className="field">
+                  <label htmlFor="add-ac">AC</label>
+                  <input
+                    id="add-ac"
+                    type="number"
+                    min={0}
+                    value={ac}
+                    onChange={(event) => setAc(event.target.value)}
+                    title="Armor Class"
+                  />
+                </div>
+              ) : null}
+
+              {system.id === 'starfinder1e' ? (
+                <>
+                  <div className="field">
+                    <label htmlFor="add-eac">EAC</label>
+                    <input
+                      id="add-eac"
+                      type="number"
+                      min={0}
+                      value={eac}
+                      onChange={(event) => setEac(event.target.value)}
+                      title="Energy Armor Class"
+                    />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="add-kac">KAC</label>
+                    <input
+                      id="add-kac"
+                      type="number"
+                      min={0}
+                      value={kac}
+                      onChange={(event) => setKac(event.target.value)}
+                      title="Kinetic Armor Class"
+                    />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="add-dr">DR</label>
+                    <input
+                      id="add-dr"
+                      type="number"
+                      min={0}
+                      value={dr}
+                      onChange={(event) => setDr(event.target.value)}
+                      title="Damage reduction"
+                    />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="add-sr">SR</label>
+                    <input
+                      id="add-sr"
+                      type="number"
+                      min={0}
+                      value={sr}
+                      onChange={(event) => setSr(event.target.value)}
+                      title="Spell resistance"
+                    />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="add-fort">Fort</label>
+                    <input
+                      id="add-fort"
+                      type="number"
+                      value={fort}
+                      onChange={(event) => setFort(event.target.value)}
+                      title="Fortitude save"
+                    />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="add-reflex">Reflex</label>
+                    <input
+                      id="add-reflex"
+                      type="number"
+                      value={reflex}
+                      onChange={(event) => setReflex(event.target.value)}
+                      title="Reflex save"
+                    />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="add-con">Con</label>
+                    <input
+                      id="add-con"
+                      type="number"
+                      value={con}
+                      onChange={(event) => setCon(event.target.value)}
+                      title="Constitution save"
+                    />
+                  </div>
+                  {role === 'monster' ? (
+                    <div className="field">
+                      <label htmlFor="add-regen">HP Regen</label>
+                      <input
+                        id="add-regen"
+                        type="number"
+                        min={0}
+                        value={regen}
+                        onChange={(event) => setRegen(event.target.value)}
+                        title="Heals this much HP at the start of the monster's turn"
+                      />
+                    </div>
+                  ) : null}
+                </>
               ) : null}
             </>
           )}

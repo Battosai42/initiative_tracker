@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createCombatant, track } from '../src/lib/factory';
 import {
   adjustTrack,
+  applyRegeneration,
   damageCombatant,
   healCombatant,
   hurtTrack,
@@ -53,6 +54,32 @@ describe('Starfinder stamina', () => {
     const healed = healCombatant(soldier, 3);
     expect(healed.hp.current).toBe(7);
     expect(healed.secondary.current).toBe(0);
+  });
+});
+
+describe('HP regeneration', () => {
+  it('heals regen each turn up to max, and revives from down/dead', () => {
+    const regenerator = createCombatant({ hp: track(10, 2), regen: 4 });
+    const healed = applyRegeneration(regenerator);
+    expect(healed.hp.current).toBe(6);
+
+    const atMax = applyRegeneration(createCombatant({ hp: track(10, 9), regen: 4 }));
+    expect(atMax.hp.current).toBe(10);
+
+    const revived = applyRegeneration(createCombatant({ hp: track(10, 0), regen: 3 }));
+    expect(revived.hp.current).toBe(3);
+    expect(revived.deathSaves).toEqual({ successes: 0, failures: 0 });
+  });
+
+  it('does nothing without regen, when defeated, or at zero max HP', () => {
+    const noRegen = applyRegeneration(createCombatant({ hp: track(10, 3), regen: 0 }));
+    expect(noRegen.hp.current).toBe(3);
+
+    const defeated = applyRegeneration(createCombatant({ hp: track(10, 1), regen: 5, defeated: true }));
+    expect(defeated.hp.current).toBe(1);
+
+    const zeroMax = applyRegeneration(createCombatant({ hp: track(0, 0), regen: 5 }));
+    expect(zeroMax.hp.current).toBe(0);
   });
 });
 

@@ -16,8 +16,8 @@ Built for **D&D 5e**, **Starfinder 1e**, **Starfinder 2e / Pathfinder 2e**, **Sh
   gray tint, and unfriendly cards a light red tint. Clicking the tag cycles through the three values.
 - Roll initiative automatically or enter a manual score, then reroll individuals or the whole table.
 - Per-system trackers:
-  - **D&D 5e** — HP, temporary HP, death saves, conditions.
-  - **Starfinder 1e** — Stamina absorbs damage before HP, plus Resolve Points.
+  - **D&D 5e** — HP, temporary HP, death saves, conditions, and Armor Class (AC).
+  - **Starfinder 1e** — Stamina absorbs damage before HP, plus Resolve Points, EAC, KAC, DR, SR, saving throws, and monster HP regeneration.
   - **Starfinder 2e / PF2e** — HP plus PF2e-style conditions.
   - **Shadowrun** — separate Physical and Stun monitors with initiative passes.
   - **Battletech** — armor before structure, heat, pilot hits, and side-based activation.

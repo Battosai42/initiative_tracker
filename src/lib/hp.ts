@@ -109,6 +109,23 @@ export function healCombatant(combatant: Combatant, amount: number): Combatant {
   };
 }
 
+/**
+ * Applies a creature's HP regeneration: heals `regen` HP up to its max each turn.
+ * No-op when there is no regen, the creature is defeated, or HP is already full.
+ * Revives from down/dead just like healing does.
+ */
+export function applyRegeneration(combatant: Combatant): Combatant {
+  if (combatant.regen <= 0 || combatant.defeated || combatant.hp.max <= 0) {
+    return combatant;
+  }
+  const healed = healTrack(combatant.hp, combatant.regen);
+  const revived =
+    combatant.hp.current <= 0 && healed.current > 0
+      ? { successes: 0, failures: 0 }
+      : combatant.deathSaves;
+  return { ...combatant, hp: healed, deathSaves: revived };
+}
+
 /** Restores every pool, clears temporary HP, conditions and defeat. */
 export function restoreCombatant(combatant: Combatant): Combatant {
   return {
