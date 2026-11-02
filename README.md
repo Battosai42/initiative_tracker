@@ -6,6 +6,8 @@ browser and is saved to `localStorage` — no accounts, backend, or network call
 Built for **D&D 5e**, **Starfinder 1e**, **Starfinder 2e / Pathfinder 2e**, **Shadowrun 5e / 6e**,
 **Battletech**, and a flexible **generic** system.
 
+<img src="images/demo.png" alt="Alt text" width="1024"/>
+
 ## Features
 
 - Add PCs, monsters, and NPCs one at a time or in numbered groups (`Goblin 1`–`Goblin 4`).
