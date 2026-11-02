@@ -293,7 +293,7 @@ interface StoreApi {
   setTempHp: (id: string, temp: number) => void;
   addCondition: (id: string, label: string, rounds: number | null) => void;
   removeCondition: (id: string, conditionId: string) => void;
-  restoreAll: () => void;
+  resetEncounter: () => void;
   setSide: (id: string, side: string) => void;
   setHeat: (id: string, heat: number) => void;
   setPilotHits: (id: string, hits: number) => void;
@@ -544,16 +544,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [updateCombatant],
   );
 
-  const restoreAll = useCallback(() => {
+  const resetEncounter = useCallback(() => {
     mutate((enc) => {
       const combatants = enc.combatants.map(restoreCombatant);
       return {
         ...enc,
+        round: 1,
         combatants,
         activeId: combatants[0]?.id ?? null,
       };
     });
-    notify('Restored everyone to full health');
+    notify('Encounter reset');
   }, [mutate, notify]);
 
   const setSide = useCallback(
@@ -640,7 +641,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setTempHp,
       addCondition,
       removeCondition,
-      restoreAll,
+      resetEncounter,
       setSide,
       setHeat,
       setPilotHits,
@@ -711,7 +712,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setTempHp,
       addCondition,
       removeCondition,
-      restoreAll,
+      resetEncounter,
       setSide,
       setHeat,
       setPilotHits,

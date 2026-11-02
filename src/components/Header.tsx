@@ -33,7 +33,7 @@ export function Header({ onOpenDice }: HeaderProps) {
     importData,
     importPcs,
     resetAll,
-    restoreAll,
+    resetEncounter,
     notify,
     templates,
   } = useStore();
@@ -263,11 +263,11 @@ export function Header({ onOpenDice }: HeaderProps) {
               <button
                 role="menuitem"
                 onClick={() => {
-                  restoreAll();
+                  resetEncounter();
                   setMenuOpen(false);
                 }}
               >
-                Restore all HP
+                Reset Encounter
               </button>
               <button
                 role="menuitem"
