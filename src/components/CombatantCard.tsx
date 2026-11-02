@@ -62,10 +62,14 @@ interface AcStatProps {
   label: string;
   value: number;
   onChange: (value: number) => void;
+  /** Lowest value the cell accepts; saving throws may be negative. */
+  min?: number;
+  /** Extra classes merged onto the cell (e.g. to add spacing). */
+  className?: string;
 }
 
-/** A compact, editable Armor Class cell (single AC for D&D, EAC/KAC for Starfinder). */
-function AcStat({ label, value, onChange }: AcStatProps) {
+/** A compact, editable armor-stat cell: AC/EAC/KAC/DR/SR (min 0) or a saving throw (may be negative). */
+function AcStat({ label, value, onChange, min = 0, className }: AcStatProps) {
   const [draft, setDraft] = useState(String(value));
 
   useEffect(() => setDraft(String(value)), [value]);
@@ -76,18 +80,18 @@ function AcStat({ label, value, onChange }: AcStatProps) {
       setDraft(String(value));
       return;
     }
-    const next = Math.max(0, Math.round(parsed));
+    const next = Math.max(min, Math.round(parsed));
     setDraft(String(next));
     if (next !== value) onChange(next);
   };
 
   return (
-    <div className="ac-cell">
+    <div className={className ? `ac-cell ${className}` : 'ac-cell'}>
       <span className="mini-label">{label}</span>
       <input
         className="ac-input"
         type="number"
-        min={0}
+        min={min}
         value={draft}
         onChange={(event) => setDraft(event.target.value)}
         onBlur={commit}
@@ -478,6 +482,36 @@ export function CombatantCard({ combatant }: { combatant: Combatant }) {
                       value={combatant.kac}
                       onChange={(next) => updateCombatant(combatant.id, { kac: next })}
                     />
+                    <AcStat
+                      label="Fort"
+                      value={combatant.fort}
+                      min={-99}
+                      className="ac-sep"
+                      onChange={(next) => updateCombatant(combatant.id, { fort: next })}
+                    />
+                    <AcStat
+                      label="Reflex"
+                      value={combatant.reflex}
+                      min={-99}
+                      onChange={(next) => updateCombatant(combatant.id, { reflex: next })}
+                    />
+                    <AcStat
+                      label="Con"
+                      value={combatant.con}
+                      min={-99}
+                      onChange={(next) => updateCombatant(combatant.id, { con: next })}
+                    />
+                    <AcStat
+                      label="DR"
+                      value={combatant.dr}
+                      className="ac-sep"
+                      onChange={(next) => updateCombatant(combatant.id, { dr: next })}
+                    />
+                    <AcStat
+                      label="SR"
+                      value={combatant.sr}
+                      onChange={(next) => updateCombatant(combatant.id, { sr: next })}
+                    />
                   </>
                 )}
               </div>
@@ -612,52 +646,6 @@ export function CombatantCard({ combatant }: { combatant: Combatant }) {
 
               {system.id === 'starfinder1e' ? (
                 <>
-                  <div className="mini-grid">
-                    <label className="mini-field">
-                      DR
-                      <CommitNumberInput
-                        min={0}
-                        value={combatant.dr}
-                        label="Damage reduction"
-                        onCommit={(value) => updateCombatant(combatant.id, { dr: value })}
-                      />
-                    </label>
-                    <label className="mini-field">
-                      SR
-                      <CommitNumberInput
-                        min={0}
-                        value={combatant.sr}
-                        label="Spell resistance"
-                        onCommit={(value) => updateCombatant(combatant.id, { sr: value })}
-                      />
-                    </label>
-                  </div>
-                  <div className="mini-grid">
-                    <label className="mini-field">
-                      Fort
-                      <CommitNumberInput
-                        value={combatant.fort}
-                        label="Fortitude save"
-                        onCommit={(value) => updateCombatant(combatant.id, { fort: value })}
-                      />
-                    </label>
-                    <label className="mini-field">
-                      Reflex
-                      <CommitNumberInput
-                        value={combatant.reflex}
-                        label="Reflex save"
-                        onCommit={(value) => updateCombatant(combatant.id, { reflex: value })}
-                      />
-                    </label>
-                    <label className="mini-field">
-                      Con
-                      <CommitNumberInput
-                        value={combatant.con}
-                        label="Constitution save"
-                        onCommit={(value) => updateCombatant(combatant.id, { con: value })}
-                      />
-                    </label>
-                  </div>
                   {combatant.role === 'monster' ? (
                     <label className="mini-field">
                       HP Regen

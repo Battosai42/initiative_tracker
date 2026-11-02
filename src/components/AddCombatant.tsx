@@ -62,6 +62,7 @@ export function AddCombatant() {
   const [regen, setRegen] = useState('0');
   const [quantity, setQuantity] = useState('1');
   const nameRef = useRef<HTMLInputElement>(null);
+  const [collapsed, setCollapsed] = useState(false);
 
   const isBt = system.showBattletech;
   const secondaryLabel = system.secondaryLabel;
@@ -225,7 +226,7 @@ export function AddCombatant() {
   const addLabel = `Add ${toInt(quantity, 1) > 1 ? `${toInt(quantity, 1)} combatants` : 'combatant'}`;
 
   return (
-    <section className="panel add-panel">
+    <section className={`panel add-panel ${collapsed ? 'add-panel--collapsed' : ''}`}>
       <div className="panel-head">
         <div>
           <h2>Add combatant</h2>
@@ -235,16 +236,28 @@ export function AddCombatant() {
               : `${system.initHint}. Defaults: PCs friendly, NPCs neutral, monsters unfriendly.`}
           </p>
         </div>
-        {!isBt ? (
-          <label className="check">
-            <input
-              type="checkbox"
-              checked={autoRoll}
-              onChange={(event) => setAutoRoll(event.target.checked)}
-            />
-            Roll initiative
-          </label>
-        ) : null}
+        <div className="panel-head-controls">
+          {!isBt ? (
+            <label className="check">
+              <input
+                type="checkbox"
+                checked={autoRoll}
+                onChange={(event) => setAutoRoll(event.target.checked)}
+              />
+              Roll initiative
+            </label>
+          ) : null}
+          <button
+            type="button"
+            className="icon-btn collapse-toggle"
+            onClick={() => setCollapsed((open) => !open)}
+            aria-expanded={!collapsed}
+            aria-label={collapsed ? 'Expand form' : 'Collapse form'}
+            title={collapsed ? 'Expand form' : 'Collapse form'}
+          >
+            {collapsed ? '▾' : '▸'}
+          </button>
+        </div>
       </div>
 
       <form onSubmit={handleSubmit}>

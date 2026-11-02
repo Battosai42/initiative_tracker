@@ -440,6 +440,13 @@ p {
   margin-top: 3px;
 }
 
+.panel-head-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+}
+
 /* ------------------------------------------------------------------ */
 /* Turn bar                                                            */
 /* ------------------------------------------------------------------ */
@@ -516,6 +523,10 @@ p {
   flex-wrap: wrap;
   gap: 10px;
   align-items: flex-end;
+}
+
+.add-panel.add-panel--collapsed .add-grid {
+  display: none;
 }
 
 .field {
@@ -1435,6 +1446,10 @@ button.disposition-tag:hover {
   background: var(--bg);
   border: 1px solid var(--line);
   border-radius: 10px;
+}
+
+.ac-sep {
+  margin-left: 18px;
 }
 
 .ac-cell .mini-label {
