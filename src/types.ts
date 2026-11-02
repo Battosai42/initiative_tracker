@@ -23,6 +23,25 @@ export interface ConditionInstance {
   rounds: number | null;
 }
 
+/**
+ * A saved combatant "template" (a.k.a. library entry). It captures the fields
+ * needed to re-add the same PC, NPC or monster quickly, without the per-encounter
+ * state such as initiative, current HP or conditions.
+ */
+export interface CombatantTemplate {
+  name: string;
+  role: Role;
+  disposition: Disposition;
+  side: string;
+  initMod: number;
+  tiebreak: number;
+  hpMax: number;
+  secondaryMax: number;
+  resolve: number;
+  armor: number;
+  structure: number;
+}
+
 export interface Combatant {
   id: string;
   name: string;
@@ -74,6 +93,11 @@ export interface AppData {
   version: number;
   encounters: Encounter[];
   activeId: string;
+  /**
+   * App-wide library of previously-added combatants. Persists across encounters
+   * so PCs (and any NPC/monster) can be re-added from the name-field dropdown.
+   */
+  templates: CombatantTemplate[];
   settings: AppSettings;
 }
 

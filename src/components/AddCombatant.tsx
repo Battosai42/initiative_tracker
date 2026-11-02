@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
 import { useStore } from '../state/store';
 import { defaultDisposition, track } from '../lib/factory';
 import { rollInitiativeScore } from '../lib/dice';
 import { sideNames } from '../lib/battletech';
-import type { Disposition, Role } from '../types';
+import type { CombatantTemplate, Disposition, Role } from '../types';
 
 const ROLE_LABELS: Record<Role, string> = {
   pc: 'PC',
@@ -23,13 +23,22 @@ const DISPOSITION_HINTS: Record<Disposition, string> = {
   unfriendly: 'Hostile creatures and monsters',
 };
 
+const ROLE_ORDER: Record<Role, number> = { pc: 0, npc: 1, monster: 2 };
+
+/** Sort the name-field dropdown: PCs first, then NPCs, then monsters, A–Z. */
+function compareTemplates(a: CombatantTemplate, b: CombatantTemplate): number {
+  const byRole = ROLE_ORDER[a.role] - ROLE_ORDER[b.role];
+  if (byRole !== 0) return byRole;
+  return a.name.localeCompare(b.name);
+}
+
 function toInt(value: string, fallback = 0): number {
   const parsed = Number.parseInt(value, 10);
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
 export function AddCombatant() {
-  const { system, encounter, addCombatants } = useStore();
+  const { system, encounter, templates, addCombatants } = useStore();
   const [name, setName] = useState('');
   const [role, setRole] = useState<Role>('monster');
   const [disposition, setDisposition] = useState<Disposition>('unfriendly');
@@ -84,6 +93,20 @@ export function AddCombatant() {
     setSide(next === 'pc' ? 'Players' : 'OpFor');
   };
 
+  const loadTemplate = useCallback((template: CombatantTemplate) => {
+    setName(template.name);
+    setRole(template.role);
+    setDisposition(template.disposition);
+    setSide(template.side);
+    setInitMod(String(template.initMod));
+    setHpMax(String(template.hpMax));
+    setSecondaryMax(String(template.secondaryMax));
+    setResolve(String(template.resolve));
+    setArmor(String(template.armor));
+    setStructure(String(template.structure));
+    setQuantity('1');
+  }, []);
+
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
     const count = Math.max(1, Math.min(20, toInt(quantity, 1)));
@@ -124,7 +147,21 @@ export function AddCombatant() {
       };
     });
 
-    addCombatants(drafts);
+    const template: CombatantTemplate = {
+      name: baseName,
+      role,
+      disposition,
+      side: isBt ? side.trim() || (role === 'pc' ? 'Players' : 'OpFor') : role === 'pc' ? 'Players' : 'OpFor',
+      initMod: modifier,
+      tiebreak: modifier,
+      hpMax: hpValue,
+      secondaryMax: secondaryValue,
+      resolve: resolveValue,
+      armor: armorValue,
+      structure: structureValue,
+    };
+
+    addCombatants(drafts, template);
     setName('');
     setScore('');
     nameRef.current?.focus();
@@ -164,12 +201,28 @@ export function AddCombatant() {
               id="add-name"
               ref={nameRef}
               value={name}
-              onChange={(event) => setName(event.target.value)}
+              onChange={(event) => {
+                const value = event.target.value;
+                setName(value);
+                const match = templates.find((entry) => entry.name === value);
+                if (match) loadTemplate(match);
+              }}
+              list="combatant-library"
               placeholder={
                 role === 'pc' ? 'Aria' : role === 'monster' ? 'Goblin' : 'Innkeeper'
               }
               autoComplete="off"
             />
+            <datalist id="combatant-library">
+              {templates
+                .slice()
+                .sort(compareTemplates)
+                .map((entry) => (
+                  <option key={`${entry.role}:${entry.name}`} value={entry.name}>
+                    {ROLE_LABELS[entry.role]} {entry.name}
+                  </option>
+                ))}
+            </datalist>
           </div>
 
           <div className="field">

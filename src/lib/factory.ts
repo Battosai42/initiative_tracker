@@ -2,6 +2,7 @@ import {
   DATA_VERSION,
   type AppData,
   type Combatant,
+  type CombatantTemplate,
   type ConditionInstance,
   type Disposition,
   type Encounter,
@@ -86,6 +87,7 @@ export function createAppData(): AppData {
     version: DATA_VERSION,
     encounters: [encounter],
     activeId: encounter.id,
+    templates: [],
     settings: { theme: 'dark' },
   };
 }
@@ -96,6 +98,26 @@ export function duplicateCombatant(source: Combatant): Combatant {
     id: uid('c'),
     name: `${source.name} (copy)`,
     conditions: source.conditions.map((condition) => ({ ...condition, id: uid('cond') })),
+  };
+}
+
+/**
+ * Reduce a combatant to its "template" shape so the same PC/NPC/monster can be
+ * re-added from the name-field dropdown without re-typing every field.
+ */
+export function combatantToTemplate(combatant: Combatant): CombatantTemplate {
+  return {
+    name: combatant.name,
+    role: combatant.role,
+    disposition: combatant.disposition,
+    side: combatant.side,
+    initMod: combatant.initMod,
+    tiebreak: combatant.tiebreak,
+    hpMax: combatant.hp.max,
+    secondaryMax: combatant.secondary.max,
+    resolve: combatant.resolve,
+    armor: combatant.armor.max,
+    structure: combatant.structure.max,
   };
 }
 
@@ -169,6 +191,26 @@ function normRole(value: unknown): Role {
 function normDisposition(value: unknown, role: Role): Disposition {
   if (value === 'friendly' || value === 'neutral' || value === 'unfriendly') return value;
   return defaultDisposition(role);
+}
+
+function normalizeTemplate(value: unknown): CombatantTemplate | null {
+  const raw = record(value);
+  const name = str(raw.name).trim();
+  if (!name) return null;
+  const role = normRole(raw.role);
+  return {
+    name: name.slice(0, 120),
+    role,
+    disposition: normDisposition(raw.disposition, role),
+    side: str(raw.side, role === 'pc' ? 'Players' : 'OpFor').slice(0, 60) || 'OpFor',
+    initMod: Math.round(num(raw.initMod, 0)),
+    tiebreak: Math.round(num(raw.tiebreak, 0)),
+    hpMax: Math.max(0, Math.round(num(raw.hpMax, 10))),
+    secondaryMax: Math.max(0, Math.round(num(raw.secondaryMax, 0))),
+    resolve: Math.max(0, Math.round(num(raw.resolve, 0))),
+    armor: Math.max(0, Math.round(num(raw.armor, 0))),
+    structure: Math.max(0, Math.round(num(raw.structure, 0))),
+  };
 }
 
 function normSystem(value: unknown): SystemId {
@@ -267,10 +309,17 @@ export function normalizeAppData(value: unknown, remapIds = false): AppData | nu
       ? activeRaw
       : encounters[0].id;
 
+  const templates = Array.isArray(raw.templates)
+    ? raw.templates
+      .map((entry) => normalizeTemplate(entry))
+      .filter((template): template is CombatantTemplate => template !== null)
+    : [];
+
   return {
     version: DATA_VERSION,
     encounters,
     activeId,
+    templates,
     settings: {
       theme: settingsRaw.theme === 'light' ? 'light' : 'dark',
     },

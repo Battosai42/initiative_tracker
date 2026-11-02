@@ -13,6 +13,7 @@ import type {
   AppData,
   AppSettings,
   Combatant,
+  CombatantTemplate,
   ConditionInstance,
   Encounter,
   SystemId,
@@ -69,6 +70,7 @@ type Action =
   | { type: 'renameEncounter'; id: string; name: string }
   | { type: 'setSystem'; system: SystemId }
   | { type: 'import'; data: AppData }
+  | { type: 'recordTemplates'; templates: CombatantTemplate[] }
   | { type: 'logRoll'; entry: DiceLogEntry }
   | { type: 'clearDiceLog' }
   | { type: 'setTheme'; theme: AppSettings['theme'] }
@@ -227,6 +229,9 @@ function reducer(state: State, action: Action): State {
         undo: { ...state.undo, [first.id]: [] },
       };
     }
+    case 'recordTemplates': {
+      return { ...state, data: { ...state.data, templates: action.templates } };
+    }
     case 'logRoll': {
       return { ...state, diceLog: [action.entry, ...state.diceLog].slice(0, 40) };
     }
@@ -244,6 +249,7 @@ function reducer(state: State, action: Action): State {
 
 interface StoreApi {
   data: AppData;
+  templates: CombatantTemplate[];
   encounter: Encounter;
   system: SystemPreset;
   displayCombatants: Combatant[];
@@ -259,7 +265,10 @@ interface StoreApi {
     id: string,
     update: Partial<Combatant> | ((combatant: Combatant) => Combatant),
   ) => void;
-  addCombatants: (drafts: Array<Partial<Combatant>>) => void;
+  addCombatants: (
+    drafts: Array<Partial<Combatant>>,
+    template?: CombatantTemplate,
+  ) => void;
   removeCombatant: (id: string) => void;
   duplicateCombatantById: (id: string) => void;
   toggleDefeated: (id: string) => void;
@@ -368,7 +377,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   );
 
   const addCombatants = useCallback(
-    (drafts: Array<Partial<Combatant>>) => {
+    (drafts: Array<Partial<Combatant>>, template?: CombatantTemplate) => {
       const created = drafts.map((draft) => createCombatant(draft));
       mutate((enc) => {
         const combatants = [...enc.combatants, ...created];
@@ -380,13 +389,19 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           null;
         return { ...enc, combatants, activeId };
       });
+      if (template) {
+        const existing = state.data.templates;
+        if (!existing.some((entry) => entry.role === template.role && entry.name === template.name)) {
+          dispatch({ type: 'recordTemplates', templates: [...existing, template] });
+        }
+      }
       notify(
         created.length === 1
           ? `Added ${created[0].name}`
           : `Added ${created.length} combatants`,
       );
     },
-    [mutate, notify],
+    [mutate, dispatch, notify, state.data.templates],
   );
 
   const damage = useCallback(
@@ -581,6 +596,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const api = useMemo<StoreApi>(
     () => ({
       data: state.data,
+      templates: state.data.templates,
       encounter,
       system,
       displayCombatants: sortForDisplay(encounter.combatants),
@@ -657,6 +673,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }),
     [
       state.data,
+      state.data.templates,
       encounter,
       system,
       state.undo,
