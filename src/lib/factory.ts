@@ -121,6 +121,35 @@ export function combatantToTemplate(combatant: Combatant): CombatantTemplate {
   };
 }
 
+/**
+ * Collect the PCs to export: every PC in the library plus every PC currently
+ * present in an encounter, de-duplicated by (role, name). Exporting from the
+ * encounter too means PCs that live only in the combat list (for example ones
+ * added by importing an encounter) are still recognised.
+ */
+export function collectExportablePcs(
+  templates: CombatantTemplate[],
+  combatants: Combatant[],
+): CombatantTemplate[] {
+  const seen = new Set<string>();
+  const pcs: CombatantTemplate[] = [];
+  const consider = (template: CombatantTemplate) => {
+    const key = `${template.role}:${template.name}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      pcs.push(template);
+    }
+  };
+  for (const entry of templates) {
+    if (entry.role === 'pc') consider(entry);
+  }
+  for (const combatant of combatants) {
+    if (combatant.role !== 'pc') continue;
+    consider(combatantToTemplate(combatant));
+  }
+  return pcs;
+}
+
 export function duplicateEncounter(source: Encounter, name?: string): Encounter {
   const now = Date.now();
   return {

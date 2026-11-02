@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useStore } from '../state/store';
 import { SYSTEM_LIST } from '../data/systems';
+import { collectExportablePcs } from '../lib/factory';
 import type { SystemId } from '../types';
 import {
   exportEncounter,
@@ -93,7 +94,7 @@ export function Header({ onOpenDice }: HeaderProps) {
   };
 
   const handleExportPcs = () => {
-    const pcs = templates.filter((entry) => entry.role === 'pc');
+    const pcs = collectExportablePcs(templates, encounter.combatants);
     if (pcs.length === 0) {
       notify('No PCs to export');
       setMenuOpen(false);
