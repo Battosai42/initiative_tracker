@@ -5,7 +5,9 @@ import type { SystemId } from '../types';
 import {
   exportEncounter,
   exportLibrary,
+  exportPcs,
   parseImport,
+  parsePcs,
   readFile,
 } from '../state/persistence';
 
@@ -28,13 +30,16 @@ export function Header({ onOpenDice }: HeaderProps) {
     setSystem,
     setTheme,
     importData,
+    importPcs,
     resetAll,
     restoreAll,
     notify,
+    templates,
   } = useStore();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const pcsFileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -82,6 +87,35 @@ export function Header({ onOpenDice }: HeaderProps) {
         return;
       }
       importData(result.data);
+    } catch (error) {
+      notify(error instanceof Error ? error.message : 'Could not read that file');
+    }
+  };
+
+  const handleExportPcs = () => {
+    const pcs = templates.filter((entry) => entry.role === 'pc');
+    if (pcs.length === 0) {
+      notify('No PCs to export');
+      setMenuOpen(false);
+      return;
+    }
+    exportPcs(pcs);
+    setMenuOpen(false);
+    notify(`${pcs.length} PC${pcs.length === 1 ? '' : 's'} exported`);
+  };
+
+  const handleImportPcs = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    try {
+      const text = await readFile(file);
+      const result = parsePcs(text);
+      if (result.error || !result.characters) {
+        notify(result.error ?? 'Could not import that file');
+        return;
+      }
+      importPcs(result.characters);
     } catch (error) {
       notify(error instanceof Error ? error.message : 'Could not read that file');
     }
@@ -193,6 +227,9 @@ export function Header({ onOpenDice }: HeaderProps) {
               >
                 Export this encounter
               </button>
+              <button role="menuitem" onClick={handleExportPcs}>
+                Export PCs…
+              </button>
               <button
                 role="menuitem"
                 onClick={() => {
@@ -211,6 +248,15 @@ export function Header({ onOpenDice }: HeaderProps) {
                 }}
               >
                 Import JSON…
+              </button>
+              <button
+                role="menuitem"
+                onClick={() => {
+                  pcsFileRef.current?.click();
+                  setMenuOpen(false);
+                }}
+              >
+                Import PCs…
               </button>
               <div className="menu-sep" />
               <button
@@ -260,6 +306,13 @@ export function Header({ onOpenDice }: HeaderProps) {
           accept="application/json,.json"
           className="hidden-input"
           onChange={handleImport}
+        />
+        <input
+          ref={pcsFileRef}
+          type="file"
+          accept="application/json,.json"
+          className="hidden-input"
+          onChange={handleImportPcs}
         />
       </div>
 

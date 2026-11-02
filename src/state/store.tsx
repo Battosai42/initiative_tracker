@@ -310,6 +310,7 @@ interface StoreApi {
   logRoll: (label: string, result: DiceResult) => void;
   clearDiceLog: () => void;
   importData: (data: AppData) => void;
+  importPcs: (characters: CombatantTemplate[]) => void;
   resetAll: () => void;
 }
 
@@ -665,6 +666,21 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         notify(
           `Imported ${data.encounters.length} encounter${data.encounters.length === 1 ? '' : 's'}`,
         );
+      },
+      importPcs: (characters) => {
+        const pcs = characters.filter((character) => character.role === 'pc');
+        if (pcs.length === 0) return;
+        const existing = state.data.templates;
+        const next = existing.filter(
+          (entry) => !pcs.some((pc) => pc.role === entry.role && pc.name === entry.name),
+        );
+        for (const pc of pcs) {
+          if (!next.some((entry) => entry.role === pc.role && entry.name === pc.name)) {
+            next.push(pc);
+          }
+        }
+        dispatch({ type: 'recordTemplates', templates: next });
+        notify(`Imported ${pcs.length} PC${pcs.length === 1 ? '' : 's'}`);
       },
       resetAll: () => {
         dispatch({ type: 'reset' });

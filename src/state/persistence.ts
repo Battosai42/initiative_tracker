@@ -1,5 +1,6 @@
 import { DATA_VERSION, type AppData, type Encounter } from '../types';
-import { createAppData, normalizeAppData } from '../lib/factory';
+import { createAppData, normalizeAppData, normalizeTemplate } from '../lib/factory';
+import type { CombatantTemplate } from '../types';
 import { syncSides } from '../lib/battletech';
 
 export const STORAGE_KEY = 'initiative-tracker:v1';
@@ -76,6 +77,14 @@ export function exportLibrary(data: AppData): void {
   download('initiative-tracker-backup.json', { ...data, kind: 'library' });
 }
 
+export function exportPcs(characters: CombatantTemplate[]): void {
+  download('party-pcs.json', {
+    version: DATA_VERSION,
+    kind: 'pcs',
+    characters,
+  });
+}
+
 export function parseImport(text: string): { data?: AppData; error?: string } {
   let raw: unknown;
   try {
@@ -88,6 +97,27 @@ export function parseImport(text: string): { data?: AppData; error?: string } {
     return { error: 'No encounters were found in that file.' };
   }
   return { data: syncLibrary(normalized) };
+}
+
+export function parsePcs(text: string): { characters?: CombatantTemplate[]; error?: string } {
+  let raw: unknown;
+  try {
+    raw = JSON.parse(text);
+  } catch {
+    return { error: 'That file is not valid JSON.' };
+  }
+  const entries = Array.isArray(raw)
+    ? raw
+    : raw && typeof raw === 'object' && Array.isArray((raw as { characters?: unknown })?.characters)
+      ? (raw as { characters: unknown[] }).characters
+      : [];
+  const characters = entries
+    .map((entry) => normalizeTemplate(entry))
+    .filter((character): character is CombatantTemplate => character !== null && character.role === 'pc');
+  if (characters.length === 0) {
+    return { error: 'No PC characters were found in that file.' };
+  }
+  return { characters };
 }
 
 export function readFile(file: File): Promise<string> {

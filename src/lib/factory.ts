@@ -193,7 +193,7 @@ function normDisposition(value: unknown, role: Role): Disposition {
   return defaultDisposition(role);
 }
 
-function normalizeTemplate(value: unknown): CombatantTemplate | null {
+export function normalizeTemplate(value: unknown): CombatantTemplate | null {
   const raw = record(value);
   const name = str(raw.name).trim();
   if (!name) return null;
