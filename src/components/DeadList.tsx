@@ -7,6 +7,12 @@ const ROLE_LABELS: Record<Combatant['role'], string> = {
   npc: 'NPC',
 };
 
+const DISPOSITION_LABELS: Record<Combatant['disposition'], string> = {
+  friendly: 'Friendly',
+  neutral: 'Neutral',
+  unfriendly: 'Unfriendly',
+};
+
 interface DeadListProps {
   combatants: Combatant[];
 }
@@ -32,13 +38,19 @@ export function DeadList({ combatants }: DeadListProps) {
             ? `${combatant.armor.current}/${combatant.armor.max} armor · ${combatant.structure.current}/${combatant.structure.max} structure`
             : `${combatant.hp.current}/${combatant.hp.max} ${system.primaryLabel}`;
           return (
-            <div className="dead-row" key={combatant.id}>
+            <div
+              className={`dead-row disposition-${combatant.disposition}`}
+              key={combatant.id}
+            >
               <span className="dead-skull" aria-hidden="true">
                 ☠
               </span>
               <span className="dead-name">{combatant.name}</span>
               <span className={`role-badge role-${combatant.role}`}>
                 {ROLE_LABELS[combatant.role]}
+              </span>
+              <span className={`disposition-tag ${combatant.disposition}`}>
+                {DISPOSITION_LABELS[combatant.disposition]}
               </span>
               {isBt ? (
                 <span className="side-badge">{combatant.side || 'Unassigned'}</span>

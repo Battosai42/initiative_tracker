@@ -3,6 +3,7 @@ import {
   type AppData,
   type Combatant,
   type ConditionInstance,
+  type Disposition,
   type Encounter,
   type Role,
   type SystemId,
@@ -29,11 +30,19 @@ export function track(max = 0, current = max): Track {
   };
 }
 
+export function defaultDisposition(role: Role): Disposition {
+  if (role === 'monster') return 'unfriendly';
+  if (role === 'npc') return 'neutral';
+  return 'friendly';
+}
+
 export function createCombatant(partial: Partial<Combatant> = {}): Combatant {
+  const role = partial.role ?? 'npc';
   return {
     id: uid('c'),
     name: 'Combatant',
-    role: 'npc',
+    role,
+    disposition: partial.disposition ?? defaultDisposition(role),
     side: 'Players',
     initiative: null,
     initMod: 0,
@@ -157,6 +166,11 @@ function normRole(value: unknown): Role {
   return value === 'pc' || value === 'monster' || value === 'npc' ? value : 'npc';
 }
 
+function normDisposition(value: unknown, role: Role): Disposition {
+  if (value === 'friendly' || value === 'neutral' || value === 'unfriendly') return value;
+  return defaultDisposition(role);
+}
+
 function normSystem(value: unknown): SystemId {
   return typeof value === 'string' && value in SYSTEMS ? (value as SystemId) : 'generic';
 }
@@ -168,6 +182,7 @@ export function normalizeCombatant(value: unknown, remapIds = false): Combatant 
     id: remapIds || !str(raw.id) ? uid('c') : str(raw.id),
     name: str(raw.name, 'Combatant').slice(0, 120) || 'Combatant',
     role,
+    disposition: normDisposition(raw.disposition, role),
     side: str(raw.side, role === 'pc' ? 'Players' : 'OpFor').slice(0, 60) || 'OpFor',
     initiative:
       raw.initiative === null || raw.initiative === undefined || raw.initiative === ''

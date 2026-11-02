@@ -17,6 +17,7 @@
   --warn: #f2b04a;
   --bad: #f16f6f;
   --secondary: #63a9ff;
+  --neutral: #9aa7b8;
   --armor: #f0a63a;
   --structure: #ef6b6b;
   --shadow: 0 14px 40px rgba(0, 0, 0, 0.32);
@@ -42,6 +43,7 @@
   --warn: #b2730a;
   --bad: #c73636;
   --secondary: #2f6fce;
+  --neutral: #6f7d90;
   --armor: #b87410;
   --structure: #c43d3d;
   --shadow: 0 14px 40px rgba(28, 44, 70, 0.12);
@@ -769,6 +771,18 @@ p {
   border-top: 0;
 }
 
+.dead-row.disposition-friendly {
+  background: color-mix(in srgb, var(--good) 8%, transparent);
+}
+
+.dead-row.disposition-neutral {
+  background: color-mix(in srgb, var(--neutral) 9%, transparent);
+}
+
+.dead-row.disposition-unfriendly {
+  background: color-mix(in srgb, var(--bad) 8%, transparent);
+}
+
 .dead-skull {
   color: var(--bad);
   font-size: 14px;
@@ -880,11 +894,26 @@ p {
   transition: background 0.15s ease;
 }
 
+.combatant.disposition-friendly {
+  --disposition: var(--good);
+  --disposition-tint: color-mix(in srgb, var(--good) 15%, var(--bg-elev));
+}
+
+.combatant.disposition-unfriendly {
+  --disposition: var(--bad);
+  --disposition-tint: color-mix(in srgb, var(--bad) 15%, var(--bg-elev));
+}
+
+.combatant.disposition-neutral {
+  --disposition: var(--neutral);
+  --disposition-tint: color-mix(in srgb, var(--neutral) 18%, var(--bg-elev));
+}
+
 .combatant.is-active {
   border-color: color-mix(in srgb, var(--accent) 70%, var(--line));
   background:
     linear-gradient(90deg, color-mix(in srgb, var(--accent) 10%, transparent), transparent 34%),
-    var(--bg-elev);
+    var(--disposition-tint, var(--bg-elev));
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent),
     0 10px 30px color-mix(in srgb, var(--accent) 12%, transparent);
 }
@@ -897,7 +926,20 @@ p {
   border-color: color-mix(in srgb, var(--accent) 48%, var(--line));
   background:
     linear-gradient(90deg, color-mix(in srgb, var(--accent) 7%, transparent), transparent 30%),
-    var(--bg-elev);
+    var(--disposition-tint, var(--bg-elev));
+}
+
+.combatant.disposition-friendly:not(.is-active):not(.side-active),
+.combatant.disposition-neutral:not(.is-active):not(.side-active),
+.combatant.disposition-unfriendly:not(.is-active):not(.side-active) {
+  border-color: color-mix(in srgb, var(--disposition) 32%, var(--line));
+  background: var(--disposition-tint);
+}
+
+.combatant.disposition-friendly:not(.is-active):not(.side-active)::before,
+.combatant.disposition-neutral:not(.is-active):not(.side-active)::before,
+.combatant.disposition-unfriendly:not(.is-active):not(.side-active)::before {
+  background: color-mix(in srgb, var(--disposition) 60%, transparent);
 }
 
 .combatant.is-defeated {
@@ -1052,6 +1094,71 @@ p {
 
 .role-badge.role-npc {
   color: var(--muted);
+}
+
+.disposition-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: transparent;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  line-height: 1.5;
+  cursor: default;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+button.disposition-tag {
+  cursor: pointer;
+}
+
+.disposition-tag.friendly {
+  --disposition: var(--good);
+  color: color-mix(in srgb, var(--good) 82%, var(--text));
+  border-color: color-mix(in srgb, var(--good) 42%, var(--line));
+  background: color-mix(in srgb, var(--good) 13%, transparent);
+}
+
+.disposition-tag.neutral {
+  --disposition: var(--neutral);
+  color: color-mix(in srgb, var(--neutral) 78%, var(--text));
+  border-color: color-mix(in srgb, var(--neutral) 42%, var(--line));
+  background: color-mix(in srgb, var(--neutral) 15%, transparent);
+}
+
+.disposition-tag.unfriendly {
+  --disposition: var(--bad);
+  color: color-mix(in srgb, var(--bad) 82%, var(--text));
+  border-color: color-mix(in srgb, var(--bad) 42%, var(--line));
+  background: color-mix(in srgb, var(--bad) 13%, transparent);
+}
+
+button.disposition-tag:hover {
+  border-color: currentColor;
+  background: color-mix(in srgb, var(--disposition) 22%, transparent);
+}
+
+.segmented button.disposition-friendly.is-selected {
+  background: var(--good);
+  color: #05130c;
+}
+
+.segmented button.disposition-neutral.is-selected {
+  background: var(--neutral);
+  color: #10151c;
+}
+
+.segmented button.disposition-unfriendly.is-selected {
+  background: var(--bad);
+  color: #fff5f5;
 }
 
 .side-badge {

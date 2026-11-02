@@ -8,6 +8,8 @@ export type SystemId =
 
 export type Role = 'pc' | 'monster' | 'npc';
 
+export type Disposition = 'friendly' | 'neutral' | 'unfriendly';
+
 export interface Track {
   current: number;
   max: number;
@@ -25,6 +27,8 @@ export interface Combatant {
   id: string;
   name: string;
   role: Role;
+  /** Friendly, neutral, and unfriendly combatants get different card tints and tags. */
+  disposition: Disposition;
   side: string;
   initiative: number | null;
   initMod: number;

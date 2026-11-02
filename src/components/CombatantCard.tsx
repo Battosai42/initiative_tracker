@@ -13,6 +13,20 @@ const ROLE_LABELS: Record<Combatant['role'], string> = {
   npc: 'NPC',
 };
 
+const DISPOSITION_LABELS: Record<Combatant['disposition'], string> = {
+  friendly: 'Friendly',
+  neutral: 'Neutral',
+  unfriendly: 'Unfriendly',
+};
+
+function nextDisposition(
+  disposition: Combatant['disposition'],
+): Combatant['disposition'] {
+  if (disposition === 'friendly') return 'neutral';
+  if (disposition === 'neutral') return 'unfriendly';
+  return 'friendly';
+}
+
 interface PipsProps {
   label: string;
   value: number;
@@ -204,6 +218,7 @@ export function CombatantCard({ combatant }: { combatant: Combatant }) {
   if (combatant.defeated) classes.push('is-defeated');
   if (expanded) classes.push('is-open');
   classes.push(`role-${combatant.role}`);
+  classes.push(`disposition-${combatant.disposition}`);
 
   const heatWarning = combatant.heat >= 14;
 
@@ -264,6 +279,23 @@ export function CombatantCard({ combatant }: { combatant: Combatant }) {
               aria-label="Combatant name"
             />
             <span className={`role-badge role-${combatant.role}`}>{ROLE_LABELS[combatant.role]}</span>
+            <button
+              type="button"
+              className={`disposition-tag ${combatant.disposition}`}
+              onClick={() =>
+                updateCombatant(combatant.id, {
+                  disposition: nextDisposition(combatant.disposition),
+                })
+              }
+              title={`${DISPOSITION_LABELS[combatant.disposition]} — click to mark ${
+                DISPOSITION_LABELS[nextDisposition(combatant.disposition)].toLowerCase()
+              }`}
+              aria-label={`${DISPOSITION_LABELS[combatant.disposition]}. Click to mark ${
+                DISPOSITION_LABELS[nextDisposition(combatant.disposition)].toLowerCase()
+              }.`}
+            >
+              {DISPOSITION_LABELS[combatant.disposition]}
+            </button>
             {isBt ? <span className="side-badge">{combatant.side || 'Unassigned'}</span> : null}
             {isActive ? <span className="active-pill">Active</span> : null}
             {combatant.acted && isBt ? <span className="acted-pill">Acted</span> : null}

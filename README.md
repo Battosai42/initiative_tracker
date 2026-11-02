@@ -9,6 +9,9 @@ Built for **D&D 5e**, **Starfinder 1e**, **Starfinder 2e / Pathfinder 2e**, **Sh
 ## Features
 
 - Add PCs, monsters, and NPCs one at a time or in numbered groups (`Goblin 1`–`Goblin 4`).
+- Tag each combatant as **Friendly**, **Neutral**, or **Unfriendly**. Monsters default to unfriendly,
+  NPCs to neutral, and PCs to friendly. Friendly cards get a light green tint, neutral cards a light
+  gray tint, and unfriendly cards a light red tint. Clicking the tag cycles through the three values.
 - Roll initiative automatically or enter a manual score, then reroll individuals or the whole table.
 - Per-system trackers:
   - **D&D 5e** — HP, temporary HP, death saves, conditions.

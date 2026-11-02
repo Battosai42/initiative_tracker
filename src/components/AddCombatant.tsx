@@ -1,14 +1,26 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useStore } from '../state/store';
-import { track } from '../lib/factory';
+import { defaultDisposition, track } from '../lib/factory';
 import { rollInitiativeScore } from '../lib/dice';
 import { sideNames } from '../lib/battletech';
-import type { Role } from '../types';
+import type { Disposition, Role } from '../types';
 
 const ROLE_LABELS: Record<Role, string> = {
   pc: 'PC',
   monster: 'Monster',
   npc: 'NPC',
+};
+
+const DISPOSITION_LABELS: Record<Disposition, string> = {
+  friendly: 'Friendly',
+  neutral: 'Neutral',
+  unfriendly: 'Unfriendly',
+};
+
+const DISPOSITION_HINTS: Record<Disposition, string> = {
+  friendly: 'Allies and friendly characters',
+  neutral: 'Bystanders and characters who are neither ally nor enemy',
+  unfriendly: 'Hostile creatures and monsters',
 };
 
 function toInt(value: string, fallback = 0): number {
@@ -20,6 +32,7 @@ export function AddCombatant() {
   const { system, encounter, addCombatants } = useStore();
   const [name, setName] = useState('');
   const [role, setRole] = useState<Role>('monster');
+  const [disposition, setDisposition] = useState<Disposition>('unfriendly');
   const [side, setSide] = useState('OpFor');
   const [initMod, setInitMod] = useState('0');
   const [score, setScore] = useState('');
@@ -67,6 +80,7 @@ export function AddCombatant() {
 
   const pickRole = (next: Role) => {
     setRole(next);
+    setDisposition(defaultDisposition(next));
     setSide(next === 'pc' ? 'Players' : 'OpFor');
   };
 
@@ -97,6 +111,7 @@ export function AddCombatant() {
       return {
         name: displayName,
         role,
+        disposition,
         side: isBt ? side.trim() || (role === 'pc' ? 'Players' : 'OpFor') : role === 'pc' ? 'Players' : 'OpFor',
         initiative,
         initMod: modifier,
@@ -125,8 +140,8 @@ export function AddCombatant() {
           <h2>Add combatant</h2>
           <p className="muted">
             {isBt
-              ? 'Add units to a side. Side initiative is rolled with 2d6.'
-              : `${system.initHint}. Monsters and NPCs can be added in groups.`}
+              ? 'Add units to a side. Side initiative is rolled with 2d6. Units follow the tag defaults.'
+              : `${system.initHint}. Defaults: PCs friendly, NPCs neutral, monsters unfriendly.`}
           </p>
         </div>
         {!isBt ? (
@@ -169,6 +184,24 @@ export function AddCombatant() {
                   aria-pressed={role === entry}
                 >
                   {ROLE_LABELS[entry]}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="field">
+            <label>Tag</label>
+            <div className="segmented" role="group" aria-label="Disposition">
+              {(['friendly', 'neutral', 'unfriendly'] as Disposition[]).map((entry) => (
+                <button
+                  key={entry}
+                  type="button"
+                  className={`disposition-${entry} ${disposition === entry ? 'is-selected' : ''}`}
+                  onClick={() => setDisposition(entry)}
+                  aria-pressed={disposition === entry}
+                  title={DISPOSITION_HINTS[entry]}
+                >
+                  {DISPOSITION_LABELS[entry]}
                 </button>
               ))}
             </div>
