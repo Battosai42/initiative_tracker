@@ -1629,9 +1629,12 @@ button.disposition-tag:hover {
 }
 
 .field-notes textarea {
+  /* Fill the grid row set by the controls column instead of a fixed height,
+     so the notes area uses all available vertical space without growing the card. */
+  flex: 1 1 auto;
+  min-height: 0;
   width: 100%;
-  resize: vertical;
-  min-height: 74px;
+  resize: none;
   font-size: 12px;
   line-height: 1.45;
 }
