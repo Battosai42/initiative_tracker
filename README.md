@@ -46,12 +46,19 @@ npm run dev
 Open <http://localhost:5173>. The dev server uses a fixed port so saved data stays on the same
 origin.
 
+To use the tracker from another device on the same network, open the **Network** URL printed by
+Vite (for example `http://192.168.1.25:5173`). The server listens on all local interfaces; if the
+page does not load, allow Node.js through your firewall on port `5173`.
+
 ### Production build
 
 ```bash
 npm run build     # type-check and bundle to dist/
 npm run preview   # serve the built app on http://localhost:4173
 ```
+
+The preview server is also reachable on your local network at its printed **Network** URL
+(port `4173`).
 
 `npm start` runs both the build and the preview server.
 

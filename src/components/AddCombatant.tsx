@@ -99,8 +99,11 @@ export function AddCombatant() {
       if (target.closest('input, textarea, select, [contenteditable="true"]')) return;
       if (event.key.toLowerCase() !== 'a' || event.metaKey || event.ctrlKey || event.altKey) return;
       event.preventDefault();
-      nameRef.current?.focus();
-      nameRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setCollapsed(false);
+      requestAnimationFrame(() => {
+        nameRef.current?.focus();
+        nameRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
     };
     window.addEventListener('keydown', focus);
     return () => window.removeEventListener('keydown', focus);

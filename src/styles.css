@@ -160,8 +160,9 @@ p {
   z-index: 30;
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 12px 22px;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  padding: 10px 22px;
   background: color-mix(in srgb, var(--bg) 84%, transparent);
   backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--line);
@@ -448,20 +449,17 @@ p {
 }
 
 /* ------------------------------------------------------------------ */
-/* Turn bar                                                            */
+/* Turn bar (inside the header)                                        */
 /* ------------------------------------------------------------------ */
 
 .turnbar {
   display: flex;
   align-items: center;
-  gap: 20px;
-  padding: 13px 18px;
-  border-radius: var(--radius);
-  border: 1px solid color-mix(in srgb, var(--accent) 34%, var(--line));
-  background:
-    linear-gradient(100deg, color-mix(in srgb, var(--accent) 13%, transparent), transparent 46%),
-    var(--bg-elev);
-  box-shadow: 0 10px 30px color-mix(in srgb, var(--accent) 9%, transparent);
+  gap: 10px;
+  flex: 0 1 auto;
+  min-width: 0;
+  padding-left: 14px;
+  border-left: 1px solid var(--line);
 }
 
 .round-box {
@@ -469,30 +467,35 @@ p {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-width: 66px;
-  padding-right: 16px;
+  min-width: 42px;
+  padding-right: 10px;
   border-right: 1px solid var(--line);
+}
+
+.round-box .eyebrow {
+  font-size: 8px;
 }
 
 .round-box strong {
   font-family: ui-monospace, 'SF Mono', 'Cascadia Code', monospace;
-  font-size: 30px;
+  font-size: 21px;
   line-height: 1;
   font-weight: 800;
   color: var(--accent);
-  margin-top: 2px;
 }
 
 .active-box {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
   min-width: 0;
+  max-width: 190px;
 }
 
 .active-box strong {
-  font-size: 16px;
+  font-size: 13px;
   font-weight: 750;
+  line-height: 1.25;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -503,15 +506,30 @@ p {
 }
 
 .active-box .muted {
-  font-size: 11px;
+  font-size: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .turn-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-left: auto;
-  flex-wrap: wrap;
+  gap: 5px;
+  flex-wrap: nowrap;
+}
+
+.turn-actions .btn {
+  padding: 6px 9px;
+  min-height: 40px;
+  font-size: 11px;
+  border-radius: 8px;
+}
+
+/* Keep the primary turn control aligned with the Dice button in the header. */
+.turn-actions .btn.primary {
+  gap: 5px;
+  border-radius: 9px;
 }
 
 /* ------------------------------------------------------------------ */
@@ -525,7 +543,7 @@ p {
   align-items: flex-end;
 }
 
-.add-panel.add-panel--collapsed .add-grid {
+.add-panel.add-panel--collapsed form {
   display: none;
 }
 
@@ -2008,12 +2026,38 @@ kbd {
 /* Responsive                                                         */
 /* ------------------------------------------------------------------ */
 
-@media (max-width: 900px) {
+@media (max-width: 1250px) {
   .topbar {
-    flex-wrap: wrap;
-    gap: 10px;
+    padding: 10px 16px;
+    gap: 8px 12px;
   }
 
+  .brand-text span {
+    display: none;
+  }
+
+  .top-actions .btn-label {
+    display: none;
+  }
+
+  .encounter-select {
+    max-width: 170px;
+  }
+
+  .system-select {
+    max-width: 110px;
+  }
+
+  .active-box {
+    max-width: 150px;
+  }
+
+  .active-box .muted {
+    display: none;
+  }
+}
+
+@media (max-width: 1180px) {
   .encounter-controls {
     order: 3;
     flex: 1 1 100%;
@@ -2026,6 +2070,20 @@ kbd {
 
   .top-actions {
     margin-left: auto;
+  }
+}
+
+@media (max-width: 900px) {
+  .topbar {
+    gap: 10px;
+  }
+
+  .turn-actions .btn-label {
+    display: none;
+  }
+
+  .turn-actions .btn.primary {
+    min-width: 50px;
   }
 
   .expand-grid {
@@ -2042,8 +2100,8 @@ kbd {
     padding: 10px 12px;
   }
 
-  .brand-text h1 {
-    font-size: 14px;
+  .brand-text {
+    display: none;
   }
 
   .btn-label {
@@ -2055,26 +2113,30 @@ kbd {
   }
 
   .turnbar {
-    flex-wrap: wrap;
-    gap: 12px;
-    padding: 12px 14px;
+    gap: 8px;
+    padding-left: 10px;
   }
 
   .round-box {
-    padding-right: 12px;
+    min-width: 36px;
+    padding-right: 8px;
   }
 
   .active-box {
     flex: 1;
+    max-width: 120px;
   }
 
   .turn-actions {
-    width: 100%;
-    margin-left: 0;
+    gap: 4px;
   }
 
   .turn-actions .btn {
-    flex: 1;
+    padding: 6px 7px;
+  }
+
+  .turn-actions .btn.primary {
+    min-width: 44px;
   }
 
   .panel {
@@ -2117,6 +2179,12 @@ kbd {
 
   .overlay {
     padding: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .active-box {
+    display: none;
   }
 }
 

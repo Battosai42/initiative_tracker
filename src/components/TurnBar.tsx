@@ -63,8 +63,10 @@ export function TurnBar() {
             onClick={previous}
             disabled={!hasCombatants}
             title="Previous turn (P)"
+            aria-label="Previous turn"
           >
-            ← Prev
+            <span aria-hidden="true">←</span>
+            <span className="btn-label">Prev</span>
           </button>
         ) : null}
         <button
@@ -72,16 +74,20 @@ export function TurnBar() {
           onClick={isBt ? nextBtSide : next}
           disabled={!hasCombatants}
           title={isBt ? 'Next side' : 'Next turn (N)'}
+          aria-label={isBt ? 'Next side' : 'Next turn'}
         >
-          {isBt ? 'Next side →' : 'Next turn →'}
+          <span className="btn-label">{isBt ? 'Next side' : 'Next turn'}</span>
+          <span aria-hidden="true">→</span>
         </button>
         <button
           className="btn"
           onClick={isBt ? rollBtSides : rollAllInitiatives}
           disabled={!hasCombatants}
           title={isBt ? 'Roll 2d6 for every side' : 'Roll initiative for every combatant'}
+          aria-label={isBt ? 'Roll sides' : 'Roll all'}
         >
-          {isBt ? 'Roll sides' : 'Roll all'}
+          <span aria-hidden="true">↻</span>
+          <span className="btn-label">{isBt ? 'Roll sides' : 'Roll all'}</span>
         </button>
       </div>
     </section>

@@ -3,6 +3,7 @@ import { useStore } from '../state/store';
 import { SYSTEM_LIST } from '../data/systems';
 import { collectExportablePcs } from '../lib/factory';
 import type { SystemId } from '../types';
+import { TurnBar } from './TurnBar';
 import {
   exportEncounter,
   exportLibrary,
@@ -316,6 +317,8 @@ export function Header({ onOpenDice }: HeaderProps) {
           onChange={handleImportPcs}
         />
       </div>
+
+      <TurnBar />
 
       <div className="top-actions">
         <button className="btn" onClick={onOpenDice} title="Dice roller (D)" aria-label="Dice roller">

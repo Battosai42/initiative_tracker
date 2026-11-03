@@ -1,7 +1,6 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import { StoreProvider, useStore } from './state/store';
 import { Header } from './components/Header';
-import { TurnBar } from './components/TurnBar';
 import { BattletechPanel } from './components/BattletechPanel';
 import { AddCombatant } from './components/AddCombatant';
 import { InitiativeList } from './components/InitiativeList';
@@ -61,7 +60,6 @@ function Tracker() {
     <div className="app" style={{ '--accent': system.accent } as CSSProperties}>
       <Header onOpenDice={() => setDiceOpen(true)} />
       <main className="layout">
-        <TurnBar />
         {system.showBattletech ? <BattletechPanel /> : null}
         <AddCombatant />
         <InitiativeList />
