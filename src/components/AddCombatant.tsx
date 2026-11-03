@@ -213,7 +213,6 @@ export function AddCombatant() {
     setCr(String(template.cr));
     setSpellDC(String(template.spellDC));
     setQuantity('1');
-    setEditing({ role: template.role, name: template.name });
   }, []);
 
   const computeValues = () => {
@@ -348,6 +347,7 @@ export function AddCombatant() {
   const editTemplate = useCallback(
     (template: CombatantTemplate) => {
       loadTemplate(template);
+      setEditing({ role: template.role, name: template.name });
       setLibraryOpen(false);
     },
     [loadTemplate],
