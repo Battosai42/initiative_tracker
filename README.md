@@ -39,9 +39,18 @@ Built for **D&D 5e**, **Starfinder 1e**, **Starfinder 2e / Pathfinder 2e**, **Sh
 
 ## Getting started
 
+It can be used via **[Github Pages](https://battosai42.github.io/initiative_tracker/)** (data added stays in your browser, so make sure to export it, or loose it). 
+
+To run it locally start by getting a copy of the code.
+```bash
+git clone https://github.com/Battosai42/initiative_tracker.git
+```
+
 Requires Node.js 20.19+ (or 22.12+) and npm.
 
 ```bash
+cd initiative_tracker
+
 npm install
 npm run dev
 ```
