@@ -61,6 +61,8 @@ export interface CombatantTemplate {
   cr: number;
   /** Starfinder: the spell save DC. */
   spellDC: number;
+  /** Free-form notes carried from the combatant card. */
+  notes: string;
 }
 
 export interface Combatant {

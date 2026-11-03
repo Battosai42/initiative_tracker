@@ -146,6 +146,7 @@ export function combatantToTemplate(combatant: Combatant): CombatantTemplate {
     regen: combatant.regen,
     cr: combatant.cr,
     spellDC: combatant.spellDC,
+    notes: combatant.notes,
   };
 }
 
@@ -194,11 +195,12 @@ export function dedupeTemplates(templates: CombatantTemplate[]): CombatantTempla
 /**
  * Overlay a template update onto an existing combatant so every instance of a
  * combatant stays in sync when its library entry is edited. The combatant's
- * per-instance state (id, initiative, current HP, conditions, notes, defeated,
- * acted, death saves, heat, pilot hits) is preserved; only the template-owned
- * fields change. Track pools (hp/secondary/armor/structure) update their `max`
- * while keeping the current value, clamped so current can never exceed the new
- * max. A new combatant is returned; the input is left untouched.
+ * per-instance state (id, initiative, current HP, conditions, defeated, acted,
+ * death saves, heat, pilot hits) is preserved; the template-owned fields change,
+ * including the now-synced `notes`. Track pools (hp/secondary/armor/structure)
+ * update their `max` while keeping the current value, clamped so current can
+ * never exceed the new max. A new combatant is returned; the input is left
+ * untouched.
  */
 export function applyTemplateUpdate(
   combatant: Combatant,
@@ -232,6 +234,7 @@ export function applyTemplateUpdate(
   if (update.regen !== undefined) next.regen = update.regen;
   if (update.cr !== undefined) next.cr = update.cr;
   if (update.spellDC !== undefined) next.spellDC = update.spellDC;
+  if (update.notes !== undefined) next.notes = update.notes;
 
   if (update.hpMax !== undefined) {
     next.hp.max = update.hpMax;
@@ -396,6 +399,7 @@ export function normalizeTemplate(value: unknown): CombatantTemplate | null {
     regen: Math.max(0, Math.round(num(raw.regen, 0))),
     cr: Math.max(0, Math.round(num(raw.cr, 0))),
     spellDC: Math.max(0, Math.round(num(raw.spellDC, 0))),
+    notes: str(raw.notes).slice(0, 4000),
   };
 }
 

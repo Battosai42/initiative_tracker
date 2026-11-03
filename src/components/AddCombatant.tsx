@@ -123,6 +123,7 @@ export function AddCombatant() {
   const [regen, setRegen] = useState('0');
   const [cr, setCr] = useState('0');
   const [spellDC, setSpellDC] = useState('0');
+  const [notes, setNotes] = useState('');
   const [quantity, setQuantity] = useState('1');
   const nameRef = useRef<HTMLInputElement>(null);
   const [collapsed, setCollapsed] = useState(false);
@@ -212,6 +213,7 @@ export function AddCombatant() {
     setRegen(String(template.regen));
     setCr(String(template.cr));
     setSpellDC(String(template.spellDC));
+    setNotes(template.notes);
     setQuantity('1');
   }, []);
 
@@ -260,6 +262,7 @@ export function AddCombatant() {
       regenValue,
       crValue,
       spellDCValue,
+      notes: notes.trim(),
     };
   };
 
@@ -288,6 +291,7 @@ export function AddCombatant() {
     regen: values.regenValue,
     cr: values.crValue,
     spellDC: values.spellDCValue,
+    notes: values.notes,
   });
 
   const handleSubmit = (event: FormEvent) => {
@@ -334,12 +338,14 @@ export function AddCombatant() {
         regen: values.regenValue,
         cr: values.crValue,
         spellDC: values.spellDCValue,
+        notes: values.notes,
       };
     });
 
     addCombatants(drafts, makeTemplate(values));
     setName('');
     setScore('');
+    setNotes('');
     nameRef.current?.focus();
   };
 
@@ -364,6 +370,7 @@ export function AddCombatant() {
     setEditing(null);
     resetDefaults();
     setName('');
+    setNotes('');
   };
 
   const deleteTemplate = (template: { role: Role; name: string }) => {
@@ -828,6 +835,17 @@ export function AddCombatant() {
               max={20}
               value={quantity}
               onChange={(event) => setQuantity(event.target.value)}
+            />
+          </div>
+
+          <div className="field field-notes">
+            <label htmlFor="add-notes">Notes</label>
+            <textarea
+              id="add-notes"
+              value={notes}
+              onChange={(event) => setNotes(event.target.value)}
+              placeholder="Resistances, tactics, ammo, reminders…"
+              rows={3}
             />
           </div>
         </div>

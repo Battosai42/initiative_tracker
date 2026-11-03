@@ -52,6 +52,7 @@ describe('combatantToTemplate', () => {
       regen: 0,
       cr: 0,
       spellDC: 0,
+      notes: '',
     });
   });
 });
@@ -261,6 +262,7 @@ describe('normalizeAppData templates', () => {
         regen: 0,
         cr: 0,
         spellDC: 0,
+        notes: '',
       },
     ];
     const data = normalizeAppData({ encounters: [{ name: 'A' }], templates }, true);
