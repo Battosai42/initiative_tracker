@@ -9,6 +9,7 @@ Built for **D&D 5e**, **Starfinder 1e**, **Starfinder 2e / Pathfinder 2e**, **Sh
 <img src="images/demo.png" alt="Alt text" width="1024"/>
 
 ## Features
+**This is still work in progress!**
 
 - Add PCs, monsters, and NPCs one at a time or in numbered groups (`Goblin 1`–`Goblin 4`).
 - Tag each combatant as **Friendly**, **Neutral**, or **Unfriendly**. Monsters default to unfriendly,
