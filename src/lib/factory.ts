@@ -73,6 +73,8 @@ export function createCombatant(partial: Partial<Combatant> = {}): Combatant {
     reflex: 0,
     con: 0,
     regen: 0,
+    cr: 0,
+    spellDC: 0,
     ...partial,
   };
 }
@@ -142,6 +144,8 @@ export function combatantToTemplate(combatant: Combatant): CombatantTemplate {
     reflex: combatant.reflex,
     con: combatant.con,
     regen: combatant.regen,
+    cr: combatant.cr,
+    spellDC: combatant.spellDC,
   };
 }
 
@@ -286,6 +290,8 @@ export function normalizeTemplate(value: unknown): CombatantTemplate | null {
     reflex: Math.round(num(raw.reflex, 0)),
     con: Math.round(num(raw.con, 0)),
     regen: Math.max(0, Math.round(num(raw.regen, 0))),
+    cr: Math.max(0, Math.round(num(raw.cr, 0))),
+    spellDC: Math.max(0, Math.round(num(raw.spellDC, 0))),
   };
 }
 
@@ -334,6 +340,8 @@ export function normalizeCombatant(value: unknown, remapIds = false): Combatant 
     reflex: Math.round(num(raw.reflex, 0)),
     con: Math.round(num(raw.con, 0)),
     regen: Math.max(0, Math.round(num(raw.regen, 0))),
+    cr: Math.max(0, Math.round(num(raw.cr, 0))),
+    spellDC: Math.max(0, Math.round(num(raw.spellDC, 0))),
   };
 }
 

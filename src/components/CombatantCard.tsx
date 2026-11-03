@@ -625,6 +625,19 @@ export function CombatantCard({ combatant }: { combatant: Combatant }) {
                       value={combatant.sr}
                       onChange={(next) => updateCombatant(combatant.id, { sr: next })}
                     />
+                    <AcStat
+                      label="CR"
+                      value={combatant.cr}
+                      className="ac-sep"
+                      title="Combatant Rating"
+                      onChange={(next) => updateCombatant(combatant.id, { cr: next })}
+                    />
+                    <AcStat
+                      label="Spell DC"
+                      value={combatant.spellDC}
+                      title="Spell save DC"
+                      onChange={(next) => updateCombatant(combatant.id, { spellDC: next })}
+                    />
                   </>
                 ) : (
                   <>
@@ -655,6 +668,19 @@ export function CombatantCard({ combatant }: { combatant: Combatant }) {
                       min={-99}
                       title="Constitution saving throw"
                       onChange={(next) => updateCombatant(combatant.id, { con: next })}
+                    />
+                    <AcStat
+                      label="CR"
+                      value={combatant.cr}
+                      className="ac-sep"
+                      title="Combatant Rating"
+                      onChange={(next) => updateCombatant(combatant.id, { cr: next })}
+                    />
+                    <AcStat
+                      label="Spell DC"
+                      value={combatant.spellDC}
+                      title="Spell save DC"
+                      onChange={(next) => updateCombatant(combatant.id, { spellDC: next })}
                     />
                   </>
                 )}

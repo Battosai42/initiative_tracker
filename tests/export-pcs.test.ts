@@ -25,6 +25,8 @@ const aria: CombatantTemplate = {
   reflex: 0,
   con: 0,
   regen: 0,
+  cr: 0,
+  spellDC: 0,
 };
 
 const goblin: CombatantTemplate = {
@@ -50,6 +52,8 @@ const goblin: CombatantTemplate = {
   reflex: 0,
   con: 0,
   regen: 0,
+  cr: 0,
+  spellDC: 0,
 };
 
 describe('collectExportablePcs', () => {

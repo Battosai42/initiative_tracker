@@ -47,6 +47,8 @@ describe('combatantToTemplate', () => {
       reflex: 0,
       con: 0,
       regen: 0,
+      cr: 0,
+      spellDC: 0,
     });
   });
 });
@@ -186,6 +188,41 @@ describe('combatant Starfinder stats', () => {
     expect(dragon?.reflex).toBe(-2);
     expect(dragon?.con).toBe(3);
   });
+
+  it('defaults CR and Spell DC to zero', () => {
+    const combatant = createCombatant({ name: 'Draft' });
+    expect(combatant.cr).toBe(0);
+    expect(combatant.spellDC).toBe(0);
+  });
+
+  it('captures CR and Spell DC in the template', () => {
+    const monster = createCombatant({
+      name: 'Lich',
+      role: 'monster',
+      cr: 18,
+      spellDC: 17,
+    });
+    const template = combatantToTemplate(monster);
+    expect(template).toMatchObject({ cr: 18, spellDC: 17 });
+  });
+
+  it('clamps negative CR and rounds Spell DC on load', () => {
+    const data = normalizeAppData(
+      {
+        encounters: [
+          {
+            name: 'A',
+            system: 'starfinder1e',
+            combatants: [{ name: 'Caster', cr: -3, spellDC: 12.6 }],
+          },
+        ],
+      },
+      true,
+    );
+    const caster = data?.encounters[0].combatants[0];
+    expect(caster?.cr).toBe(0);
+    expect(caster?.spellDC).toBe(13);
+  });
 });
 
 describe('normalizeAppData templates', () => {
@@ -219,6 +256,8 @@ describe('normalizeAppData templates', () => {
         reflex: 0,
         con: 0,
         regen: 0,
+        cr: 0,
+        spellDC: 0,
       },
     ];
     const data = normalizeAppData({ encounters: [{ name: 'A' }], templates }, true);

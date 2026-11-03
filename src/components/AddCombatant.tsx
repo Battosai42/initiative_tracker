@@ -63,6 +63,8 @@ export function AddCombatant() {
   const [shield, setShield] = useState('0');
   const [saveDrafts, setSaveDrafts] = useState(() => savesToDrafts());
   const [regen, setRegen] = useState('0');
+  const [cr, setCr] = useState('0');
+  const [spellDC, setSpellDC] = useState('0');
   const [quantity, setQuantity] = useState('1');
   const nameRef = useRef<HTMLInputElement>(null);
   const [collapsed, setCollapsed] = useState(false);
@@ -84,6 +86,8 @@ export function AddCombatant() {
       setCon('0');
       setShield('0');
       setRegen('0');
+      setCr('0');
+      setSpellDC('0');
     } else {
       setSecondaryMax('5');
     }
@@ -141,6 +145,8 @@ export function AddCombatant() {
     setReflex(String(template.reflex));
     setCon(String(template.con));
     setRegen(String(template.regen));
+    setCr(String(template.cr));
+    setSpellDC(String(template.spellDC));
     setQuantity('1');
   }, []);
 
@@ -170,6 +176,8 @@ export function AddCombatant() {
     const reflexValue = toInt(reflex, 0);
     const conValue = toInt(con, 0);
     const regenValue = Math.max(0, toInt(regen, 0));
+    const crValue = Math.max(0, toInt(cr, 0));
+    const spellDCValue = Math.max(0, toInt(spellDC, 0));
 
     const drafts = Array.from({ length: count }, (_, index) => {
       const displayName = count > 1 ? `${baseName} ${index + 1}` : baseName;
@@ -205,6 +213,8 @@ export function AddCombatant() {
         reflex: reflexValue,
         con: conValue,
         regen: regenValue,
+        cr: crValue,
+        spellDC: spellDCValue,
       };
     });
 
@@ -231,6 +241,8 @@ export function AddCombatant() {
       reflex: reflexValue,
       con: conValue,
       regen: regenValue,
+      cr: crValue,
+      spellDC: spellDCValue,
     };
 
     addCombatants(drafts, template);
@@ -532,6 +544,28 @@ export function AddCombatant() {
                       title="Constitution save"
                     />
                   </div>
+                  <div className="field">
+                    <label htmlFor="add-cr">CR</label>
+                    <input
+                      id="add-cr"
+                      type="number"
+                      min={0}
+                      value={cr}
+                      onChange={(event) => setCr(event.target.value)}
+                      title="Combatant Rating"
+                    />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="add-spell-dc">Spell DC</label>
+                    <input
+                      id="add-spell-dc"
+                      type="number"
+                      min={0}
+                      value={spellDC}
+                      onChange={(event) => setSpellDC(event.target.value)}
+                      title="Spell save DC"
+                    />
+                  </div>
                 </>
               ) : null}
 
@@ -579,6 +613,28 @@ export function AddCombatant() {
                       value={sr}
                       onChange={(event) => setSr(event.target.value)}
                       title="Spell resistance"
+                    />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="add-cr">CR</label>
+                    <input
+                      id="add-cr"
+                      type="number"
+                      min={0}
+                      value={cr}
+                      onChange={(event) => setCr(event.target.value)}
+                      title="Combatant Rating"
+                    />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="add-spell-dc">Spell DC</label>
+                    <input
+                      id="add-spell-dc"
+                      type="number"
+                      min={0}
+                      value={spellDC}
+                      onChange={(event) => setSpellDC(event.target.value)}
+                      title="Spell save DC"
                     />
                   </div>
                   <div className="field">

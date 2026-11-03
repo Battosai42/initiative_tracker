@@ -57,6 +57,10 @@ export interface CombatantTemplate {
   reflex: number;
   con: number;
   regen: number;
+  /** Starfinder: Combatant Rating (a monster's challenge rating). */
+  cr: number;
+  /** Starfinder: the spell save DC. */
+  spellDC: number;
 }
 
 export interface Combatant {
@@ -103,6 +107,10 @@ export interface Combatant {
   con: number;
   /** Starfinder: monsters heal this much HP at the start of their turn. */
   regen: number;
+  /** Starfinder: Combatant Rating (a monster's challenge rating). */
+  cr: number;
+  /** Starfinder: the spell save DC. */
+  spellDC: number;
 }
 
 export interface Encounter {
