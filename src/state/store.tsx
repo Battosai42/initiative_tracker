@@ -23,6 +23,7 @@ import type {
 import { getSystem, type SystemPreset } from '../data/systems';
 import {
   addTemplates,
+  applyTemplateUpdate,
   dedupeTemplates,
   createAppData,
   createCombatant,
@@ -102,7 +103,7 @@ function replaceEncounter(data: AppData, encounter: Encounter): AppData {
   };
 }
 
-function reducer(state: State, action: Action): State {
+export function reducer(state: State, action: Action): State {
   switch (action.type) {
     case 'mutate': {
       const current = activeEncounter(state.data);
@@ -241,6 +242,13 @@ function reducer(state: State, action: Action): State {
       return { ...state, data: { ...state.data, templates: action.templates } };
     }
     case 'updateTemplate': {
+      if (
+        !state.data.templates.some(
+          (template) => template.role === action.role && template.name === action.name,
+        )
+      ) {
+        return state;
+      }
       const next = dedupeTemplates(
         state.data.templates.map((template) =>
           template.role === action.role && template.name === action.name
@@ -248,7 +256,29 @@ function reducer(state: State, action: Action): State {
             : template,
         ),
       );
-      return { ...state, data: { ...state.data, templates: next } };
+      // Keep every instance of the edited combatant in sync across all
+      // encounters, preserving each combatant's per-instance state. Undo is
+      // tracked per encounter so any of the synced instances can be reverted.
+      const undo = { ...state.undo };
+      const encounters = state.data.encounters.map((encounter) => {
+        const matches = (combatant: Combatant) =>
+          combatant.role === action.role && combatant.name === action.name;
+        if (!encounter.combatants.some(matches)) return encounter;
+        const synced = {
+          ...encounter,
+          combatants: encounter.combatants.map((combatant) =>
+            matches(combatant) ? applyTemplateUpdate(combatant, action.update) : combatant,
+          ),
+        };
+        const stack = undo[encounter.id] ?? [];
+        undo[encounter.id] = [...stack, structuredClone(encounter)].slice(-60);
+        return synced;
+      });
+      return {
+        ...state,
+        data: { ...state.data, templates: next, encounters },
+        undo,
+      };
     }
     case 'removeTemplate': {
       const next = dedupeTemplates(

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   addTemplates,
+  applyTemplateUpdate,
   combatantToTemplate,
   createCombatant,
   dedupeTemplates,
@@ -354,5 +355,147 @@ describe('dedupeTemplates', () => {
     const snapshot = [...input];
     dedupeTemplates(input);
     expect(input).toEqual(snapshot);
+  });
+});
+
+describe('applyTemplateUpdate', () => {
+  const base = createCombatant({
+    name: 'Goblin',
+    role: 'monster',
+    disposition: 'unfriendly',
+    side: 'OpFor',
+    initMod: 3,
+    tiebreak: 1,
+    hp: { current: 4, max: 10, temp: 0 },
+    secondary: { current: 2, max: 5, temp: 0 },
+    resolve: 3,
+    armor: { current: 0, max: 10, temp: 0 },
+    structure: { current: 0, max: 5, temp: 0 },
+    ac: 15,
+    eac: 12,
+    kac: 14,
+    shield: 2,
+    saves: { str: 3, dex: 5, con: 1, int: 0, wis: -1, cha: 0 },
+    dr: 0,
+    sr: 0,
+    fort: 5,
+    reflex: 4,
+    con: 2,
+    regen: 0,
+    cr: 1,
+    spellDC: 0,
+  });
+
+  it('updates the template-owned scalar fields', () => {
+    const next = applyTemplateUpdate(base, {
+      hpMax: 20,
+      secondaryMax: 8,
+      resolve: 6,
+      armor: 14,
+      structure: 7,
+      ac: 18,
+      eac: 15,
+      kac: 16,
+      shield: 4,
+      saves: { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 },
+      dr: 3,
+      sr: 10,
+      fort: 7,
+      reflex: 2,
+      con: 5,
+      regen: 2,
+      cr: 5,
+      spellDC: 15,
+    });
+    expect(next).toMatchObject({
+      resolve: 6,
+      ac: 18,
+      eac: 15,
+      kac: 16,
+      shield: 4,
+      saves: { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 },
+      dr: 3,
+      sr: 10,
+      fort: 7,
+      reflex: 2,
+      con: 5,
+      regen: 2,
+      cr: 5,
+      spellDC: 15,
+      hp: { max: 20 },
+      secondary: { max: 8 },
+      armor: { max: 14 },
+      structure: { max: 7 },
+    });
+  });
+
+  it('updates track maxes and preserves the current value', () => {
+    const next = applyTemplateUpdate(base, { hpMax: 25, secondaryMax: 9 });
+    expect(next.hp.max).toBe(25);
+    expect(next.hp.current).toBe(4);
+    expect(next.secondary.max).toBe(9);
+    expect(next.secondary.current).toBe(2);
+  });
+
+  it('clamps current HP down when the max shrinks', () => {
+    const next = applyTemplateUpdate(base, { hpMax: 3 });
+    expect(next.hp.max).toBe(3);
+    expect(next.hp.current).toBe(3);
+  });
+
+  it('preserves temp HP and the current value of unchanged tracks', () => {
+    const withTemp = createCombatant({
+      hp: { current: 8, max: 20, temp: 5 },
+      secondary: { current: 3, max: 6, temp: 0 },
+    });
+    const next = applyTemplateUpdate(withTemp, { secondaryMax: 12 });
+    expect(next.hp.temp).toBe(5);
+    expect(next.hp.max).toBe(20);
+    expect(next.secondary.max).toBe(12);
+    expect(next.secondary.temp).toBe(0);
+  });
+
+  it('preserves per-instance state (id, initiative, conditions, notes, etc.)', () => {
+    const instance = createCombatant({
+      name: 'Goblin',
+      initiative: 17,
+      notes: 'Flanking specialist',
+      defeated: true,
+      acted: true,
+      heat: 12,
+      pilotHits: 3,
+      conditions: [{ id: 'cond_1', label: 'Frightened', rounds: 2 }],
+      deathSaves: { successes: 1, failures: 2 },
+    });
+    const next = applyTemplateUpdate(instance, { hpMax: 40, ac: 20 });
+    expect(next.id).toBe(instance.id);
+    expect(next.initiative).toBe(17);
+    expect(next.notes).toBe('Flanking specialist');
+    expect(next.defeated).toBe(true);
+    expect(next.acted).toBe(true);
+    expect(next.heat).toBe(12);
+    expect(next.pilotHits).toBe(3);
+    expect(next.deathSaves).toEqual({ successes: 1, failures: 2 });
+    expect(next.conditions).toEqual([{ id: 'cond_1', label: 'Frightened', rounds: 2 }]);
+  });
+
+  it('applies a role and name rename', () => {
+    const next = applyTemplateUpdate(base, { role: 'npc', name: 'Goblin Boss' });
+    expect(next.role).toBe('npc');
+    expect(next.name).toBe('Goblin Boss');
+  });
+
+  it('leaves a partial update untouched where fields are absent', () => {
+    const next = applyTemplateUpdate(base, { ac: 21 });
+    expect(next.ac).toBe(21);
+    expect(next.cr).toBe(base.cr);
+    expect(next.spellDC).toBe(base.spellDC);
+    expect(next.hp.max).toBe(base.hp.max);
+  });
+
+  it('does not mutate the input combatant', () => {
+    const snapshot = structuredClone(base);
+    applyTemplateUpdate(base, { hpMax: 99, ac: 99, name: 'Renamed' });
+    expect(base).toEqual(snapshot);
   });
 });

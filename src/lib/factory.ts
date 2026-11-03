@@ -192,6 +192,68 @@ export function dedupeTemplates(templates: CombatantTemplate[]): CombatantTempla
 }
 
 /**
+ * Overlay a template update onto an existing combatant so every instance of a
+ * combatant stays in sync when its library entry is edited. The combatant's
+ * per-instance state (id, initiative, current HP, conditions, notes, defeated,
+ * acted, death saves, heat, pilot hits) is preserved; only the template-owned
+ * fields change. Track pools (hp/secondary/armor/structure) update their `max`
+ * while keeping the current value, clamped so current can never exceed the new
+ * max. A new combatant is returned; the input is left untouched.
+ */
+export function applyTemplateUpdate(
+  combatant: Combatant,
+  update: Partial<CombatantTemplate>,
+): Combatant {
+  const next: Combatant = {
+    ...combatant,
+    hp: { ...combatant.hp },
+    secondary: { ...combatant.secondary },
+    armor: { ...combatant.armor },
+    structure: { ...combatant.structure },
+  };
+
+  if (update.name !== undefined) next.name = update.name;
+  if (update.role !== undefined) next.role = update.role;
+  if (update.disposition !== undefined) next.disposition = update.disposition;
+  if (update.side !== undefined) next.side = update.side;
+  if (update.initMod !== undefined) next.initMod = update.initMod;
+  if (update.tiebreak !== undefined) next.tiebreak = update.tiebreak;
+  if (update.resolve !== undefined) next.resolve = update.resolve;
+  if (update.ac !== undefined) next.ac = update.ac;
+  if (update.eac !== undefined) next.eac = update.eac;
+  if (update.kac !== undefined) next.kac = update.kac;
+  if (update.shield !== undefined) next.shield = update.shield;
+  if (update.saves !== undefined) next.saves = { ...update.saves };
+  if (update.dr !== undefined) next.dr = update.dr;
+  if (update.sr !== undefined) next.sr = update.sr;
+  if (update.fort !== undefined) next.fort = update.fort;
+  if (update.reflex !== undefined) next.reflex = update.reflex;
+  if (update.con !== undefined) next.con = update.con;
+  if (update.regen !== undefined) next.regen = update.regen;
+  if (update.cr !== undefined) next.cr = update.cr;
+  if (update.spellDC !== undefined) next.spellDC = update.spellDC;
+
+  if (update.hpMax !== undefined) {
+    next.hp.max = update.hpMax;
+    next.hp.current = Math.max(0, Math.min(next.hp.current, update.hpMax));
+  }
+  if (update.secondaryMax !== undefined) {
+    next.secondary.max = update.secondaryMax;
+    next.secondary.current = Math.max(0, Math.min(next.secondary.current, update.secondaryMax));
+  }
+  if (update.armor !== undefined) {
+    next.armor.max = update.armor;
+    next.armor.current = Math.max(0, Math.min(next.armor.current, update.armor));
+  }
+  if (update.structure !== undefined) {
+    next.structure.max = update.structure;
+    next.structure.current = Math.max(0, Math.min(next.structure.current, update.structure));
+  }
+
+  return next;
+}
+
+/**
  * Collect the PCs to export: every PC in the library plus every PC currently
  * present in an encounter, de-duplicated by (role, name). Exporting from the
  * encounter too means PCs that live only in the combat list (for example ones
