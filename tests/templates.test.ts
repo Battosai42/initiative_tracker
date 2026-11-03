@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
+  addTemplates,
   combatantToTemplate,
   createCombatant,
   normalizeAppData,
 } from '../src/lib/factory';
-import type { CombatantTemplate } from '../src/types';
+import type { Combatant, CombatantTemplate } from '../src/types';
 
 describe('combatantToTemplate', () => {
   it('captures the fields needed to re-add a combatant', () => {
@@ -279,5 +280,45 @@ describe('normalizeAppData templates', () => {
     expect(data?.templates.map((entry) => entry.name)).toEqual(['Valid']);
     expect(data?.templates[0]?.hpMax).toBe(12);
     expect(data?.templates[0]?.armor).toBe(0);
+  });
+});
+
+describe('addTemplates', () => {
+  const goblin: Combatant = createCombatant({
+    name: 'Goblin',
+    role: 'monster',
+    disposition: 'unfriendly',
+    side: 'OpFor',
+    hp: { current: 4, max: 10, temp: 0 },
+  });
+  const orc: Combatant = createCombatant({
+    name: 'Orc',
+    role: 'monster',
+    disposition: 'unfriendly',
+    side: 'OpFor',
+    hp: { current: 6, max: 12, temp: 0 },
+  });
+
+  it('adds a template for each imported combatant', () => {
+    const result = addTemplates([], [goblin, orc]);
+    expect(result.map((entry) => entry.name)).toEqual(['Goblin', 'Orc']);
+  });
+
+  it('does not mutate the existing template list', () => {
+    const existing: CombatantTemplate[] = [combatantToTemplate(goblin)];
+    const snapshot = [...existing];
+    addTemplates(existing, [orc]);
+    expect(existing).toEqual(snapshot);
+  });
+
+  it('skips combatants whose (role, name) already exists', () => {
+    const existing = [combatantToTemplate(goblin)];
+    const result = addTemplates(existing, [goblin, orc]);
+    expect(result.map((entry) => entry.name)).toEqual(['Goblin', 'Orc']);
+  });
+
+  it('dedupes repeated combatants within the imported set', () => {
+    const result = addTemplates([], [goblin, goblin, orc]);
+    expect(result.map((entry) => entry.name)).toEqual(['Goblin', 'Orc']);
   });
 });

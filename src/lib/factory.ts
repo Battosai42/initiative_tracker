@@ -150,6 +150,29 @@ export function combatantToTemplate(combatant: Combatant): CombatantTemplate {
 }
 
 /**
+ * Merge a template for every combatant into the existing library, skipping any
+ * whose (role, name) already exists. Used when importing an encounter so each
+ * loaded combatant can be re-added from the dropdown without re-typing. A new
+ * array is returned; the input list is left untouched.
+ */
+export function addTemplates(
+  templates: CombatantTemplate[],
+  combatants: Combatant[],
+): CombatantTemplate[] {
+  const next = [...templates];
+  const seen = new Set<string>();
+  for (const entry of templates) seen.add(`${entry.role}:${entry.name}`);
+  for (const combatant of combatants) {
+    const key = `${combatant.role}:${combatant.name}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      next.push(combatantToTemplate(combatant));
+    }
+  }
+  return next;
+}
+
+/**
  * Collect the PCs to export: every PC in the library plus every PC currently
  * present in an encounter, de-duplicated by (role, name). Exporting from the
  * encounter too means PCs that live only in the combat list (for example ones

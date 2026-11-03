@@ -21,6 +21,7 @@ import type {
 } from '../types';
 import { getSystem, type SystemPreset } from '../data/systems';
 import {
+  addTemplates,
   createAppData,
   createCombatant,
   createEncounter,
@@ -219,12 +220,15 @@ function reducer(state: State, action: Action): State {
     case 'import': {
       if (action.data.encounters.length === 0) return state;
       const first = action.data.encounters[0];
+      const combatants = action.data.encounters.flatMap((encounter) => encounter.combatants);
+      const templates = addTemplates(state.data.templates, combatants);
       return {
         ...state,
         data: {
           ...state.data,
           encounters: [...state.data.encounters, ...action.data.encounters],
           activeId: first.id,
+          templates,
         },
         undo: { ...state.undo, [first.id]: [] },
       };
