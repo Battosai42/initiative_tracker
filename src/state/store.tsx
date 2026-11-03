@@ -16,12 +16,14 @@ import type {
   CombatantTemplate,
   ConditionInstance,
   Encounter,
+  Role,
   SystemId,
   Track,
 } from '../types';
 import { getSystem, type SystemPreset } from '../data/systems';
 import {
   addTemplates,
+  dedupeTemplates,
   createAppData,
   createCombatant,
   createEncounter,
@@ -72,6 +74,8 @@ type Action =
   | { type: 'setSystem'; system: SystemId }
   | { type: 'import'; data: AppData }
   | { type: 'recordTemplates'; templates: CombatantTemplate[] }
+  | { type: 'updateTemplate'; role: Role; name: string; update: Partial<CombatantTemplate> }
+  | { type: 'removeTemplate'; role: Role; name: string }
   | { type: 'logRoll'; entry: DiceLogEntry }
   | { type: 'clearDiceLog' }
   | { type: 'setTheme'; theme: AppSettings['theme'] }
@@ -236,6 +240,24 @@ function reducer(state: State, action: Action): State {
     case 'recordTemplates': {
       return { ...state, data: { ...state.data, templates: action.templates } };
     }
+    case 'updateTemplate': {
+      const next = dedupeTemplates(
+        state.data.templates.map((template) =>
+          template.role === action.role && template.name === action.name
+            ? { ...template, ...action.update }
+            : template,
+        ),
+      );
+      return { ...state, data: { ...state.data, templates: next } };
+    }
+    case 'removeTemplate': {
+      const next = dedupeTemplates(
+        state.data.templates.filter(
+          (template) => !(template.role === action.role && template.name === action.name),
+        ),
+      );
+      return { ...state, data: { ...state.data, templates: next } };
+    }
     case 'logRoll': {
       return { ...state, diceLog: [action.entry, ...state.diceLog].slice(0, 40) };
     }
@@ -315,6 +337,8 @@ interface StoreApi {
   clearDiceLog: () => void;
   importData: (data: AppData) => void;
   importPcs: (characters: CombatantTemplate[]) => void;
+  updateTemplate: (role: Role, name: string, update: Partial<CombatantTemplate>) => void;
+  removeTemplate: (role: Role, name: string) => void;
   resetAll: () => void;
 }
 
@@ -687,6 +711,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         dispatch({ type: 'recordTemplates', templates: next });
         notify(`Imported ${pcs.length} PC${pcs.length === 1 ? '' : 's'}`);
       },
+      updateTemplate: (role, name, update) =>
+        dispatch({ type: 'updateTemplate', role, name, update }),
+      removeTemplate: (role, name) => dispatch({ type: 'removeTemplate', role, name }),
       resetAll: () => {
         dispatch({ type: 'reset' });
         notify('All data reset');

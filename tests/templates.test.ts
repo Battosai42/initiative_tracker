@@ -3,6 +3,7 @@ import {
   addTemplates,
   combatantToTemplate,
   createCombatant,
+  dedupeTemplates,
   normalizeAppData,
 } from '../src/lib/factory';
 import type { Combatant, CombatantTemplate } from '../src/types';
@@ -320,5 +321,38 @@ describe('addTemplates', () => {
   it('dedupes repeated combatants within the imported set', () => {
     const result = addTemplates([], [goblin, goblin, orc]);
     expect(result.map((entry) => entry.name)).toEqual(['Goblin', 'Orc']);
+  });
+});
+
+describe('dedupeTemplates', () => {
+  const goblin = combatantToTemplate(
+    createCombatant({ name: 'Goblin', role: 'monster', disposition: 'unfriendly' }),
+  );
+  const orc = combatantToTemplate(
+    createCombatant({ name: 'Orc', role: 'monster', disposition: 'unfriendly' }),
+  );
+
+  it('leaves a clean list untouched', () => {
+    const result = dedupeTemplates([goblin, orc]);
+    expect(result.map((entry) => entry.name)).toEqual(['Goblin', 'Orc']);
+  });
+
+  it('removes duplicate (role, name) entries, keeping the first', () => {
+    const result = dedupeTemplates([goblin, orc, { ...goblin, hpMax: 99 }]);
+    expect(result).toHaveLength(2);
+    expect(result[0]).toBe(goblin);
+  });
+
+  it('treats the same name with different roles as distinct', () => {
+    const pcGoblin = { ...goblin, role: 'pc' as const };
+    const result = dedupeTemplates([goblin, pcGoblin]);
+    expect(result.map((entry) => entry.role)).toEqual(['monster', 'pc']);
+  });
+
+  it('does not mutate the input list', () => {
+    const input = [goblin, orc, goblin];
+    const snapshot = [...input];
+    dedupeTemplates(input);
+    expect(input).toEqual(snapshot);
   });
 });

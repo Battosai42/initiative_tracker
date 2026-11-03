@@ -38,8 +38,66 @@ function toInt(value: string, fallback = 0): number {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
+interface LibraryProps {
+  templates: CombatantTemplate[];
+  onEdit: (template: CombatantTemplate) => void;
+  onDelete: (template: { role: Role; name: string }) => void;
+}
+
+/**
+ * The template library: a browsable list of saved combatants. Editing loads one
+ * back into the form; deleting removes it from the library so it can no longer
+ * be re-added from the dropdown.
+ */
+function Library({ templates, onEdit, onDelete }: LibraryProps) {
+  const sorted = templates.slice().sort(compareTemplates);
+  return (
+    <div className="library">
+      <div className="library-head">
+        <h3 className="library-title">Template library</h3>
+        <span className="muted">
+          {sorted.length} {sorted.length === 1 ? 'template' : 'templates'}
+        </span>
+      </div>
+      {sorted.length === 0 ? (
+        <p className="muted library-empty">
+          No templates yet. Add a combatant to create the first one.
+        </p>
+      ) : (
+        <div className="library-list">
+          {sorted.map((template) => (
+            <div className="library-row" key={`${template.role}:${template.name}`}>
+              <span className="library-row-name">{template.name}</span>
+              <span className="library-tag">{ROLE_LABELS[template.role]}</span>
+              <button
+                type="button"
+                className="btn icon small"
+                aria-label={`Edit ${template.name}`}
+                title={`Edit ${template.name}`}
+                onClick={() => onEdit(template)}
+              >
+                ✎
+              </button>
+              <button
+                type="button"
+                className="btn icon small danger"
+                aria-label={`Delete ${template.name}`}
+                title={`Delete ${template.name}`}
+                onClick={() => onDelete(template)}
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function AddCombatant() {
-  const { system, encounter, templates, addCombatants } = useStore();
+  const { system, encounter, templates, addCombatants, updateTemplate, removeTemplate, notify } =
+    useStore();
   const [name, setName] = useState('');
   const [role, setRole] = useState<Role>('monster');
   const [disposition, setDisposition] = useState<Disposition>('unfriendly');
@@ -68,11 +126,14 @@ export function AddCombatant() {
   const [quantity, setQuantity] = useState('1');
   const nameRef = useRef<HTMLInputElement>(null);
   const [collapsed, setCollapsed] = useState(false);
+  const [libraryOpen, setLibraryOpen] = useState(false);
+  // The template currently loaded into the form for editing, if any.
+  const [editing, setEditing] = useState<{ role: Role; name: string } | null>(null);
 
   const isBt = system.showBattletech;
   const secondaryLabel = system.secondaryLabel;
 
-  useEffect(() => {
+  const resetDefaults = useCallback(() => {
     if (system.id === 'shadowrun') {
       setHpMax('10');
       setSecondaryMax('10');
@@ -101,6 +162,10 @@ export function AddCombatant() {
     setKac('10');
     setSaveDrafts(savesToDrafts());
   }, [system.id, isBt]);
+
+  useEffect(() => {
+    resetDefaults();
+  }, [resetDefaults]);
 
   useEffect(() => {
     const focus = (event: KeyboardEvent) => {
@@ -148,16 +213,13 @@ export function AddCombatant() {
     setCr(String(template.cr));
     setSpellDC(String(template.spellDC));
     setQuantity('1');
+    setEditing({ role: template.role, name: template.name });
   }, []);
 
-  const handleSubmit = (event: FormEvent) => {
-    event.preventDefault();
-    const count = Math.max(1, Math.min(20, toInt(quantity, 1)));
+  const computeValues = () => {
     const baseName =
       name.trim() || (role === 'pc' ? 'Player' : role === 'monster' ? 'Monster' : 'NPC');
     const modifier = toInt(initMod, 0);
-    const manualScore = score.trim() === '' ? null : Math.round(Number(score));
-    const mode = system.initiative === 'shadowrun' ? 'shadowrun' : 'd20';
     const hpValue = Math.max(1, toInt(hpMax, 10));
     const secondaryValue = Math.max(0, toInt(secondaryMax, 0));
     const resolveValue = Math.max(0, toInt(resolve, 0));
@@ -178,13 +240,71 @@ export function AddCombatant() {
     const regenValue = Math.max(0, toInt(regen, 0));
     const crValue = Math.max(0, toInt(cr, 0));
     const spellDCValue = Math.max(0, toInt(spellDC, 0));
+    return {
+      baseName,
+      modifier,
+      hpValue,
+      secondaryValue,
+      resolveValue,
+      armorValue,
+      structureValue,
+      acValue,
+      eacValue,
+      kacValue,
+      shieldValue,
+      saveValues,
+      drValue,
+      srValue,
+      fortValue,
+      reflexValue,
+      conValue,
+      regenValue,
+      crValue,
+      spellDCValue,
+    };
+  };
+
+  const makeTemplate = (values: ReturnType<typeof computeValues>): CombatantTemplate => ({
+    name: values.baseName,
+    role,
+    disposition,
+    side: isBt ? side.trim() || (role === 'pc' ? 'Players' : 'OpFor') : role === 'pc' ? 'Players' : 'OpFor',
+    initMod: values.modifier,
+    tiebreak: values.modifier,
+    hpMax: values.hpValue,
+    secondaryMax: values.secondaryValue,
+    resolve: values.resolveValue,
+    armor: values.armorValue,
+    structure: values.structureValue,
+    ac: values.acValue,
+    eac: values.eacValue,
+    kac: values.kacValue,
+    shield: values.shieldValue,
+    saves: values.saveValues,
+    dr: values.drValue,
+    sr: values.srValue,
+    fort: values.fortValue,
+    reflex: values.reflexValue,
+    con: values.conValue,
+    regen: values.regenValue,
+    cr: values.crValue,
+    spellDC: values.spellDCValue,
+  });
+
+  const handleSubmit = (event: FormEvent) => {
+    event.preventDefault();
+    if (editing) return;
+    const count = Math.max(1, Math.min(20, toInt(quantity, 1)));
+    const values = computeValues();
+    const manualScore = score.trim() === '' ? null : Math.round(Number(score));
+    const mode = system.initiative === 'shadowrun' ? 'shadowrun' : 'd20';
 
     const drafts = Array.from({ length: count }, (_, index) => {
-      const displayName = count > 1 ? `${baseName} ${index + 1}` : baseName;
+      const displayName = count > 1 ? `${values.baseName} ${index + 1}` : values.baseName;
       let initiative: number | null = null;
       if (!isBt) {
         initiative = autoRoll
-          ? rollInitiativeScore(mode, modifier).total
+          ? rollInitiativeScore(mode, values.modifier).total
           : manualScore !== null && Number.isFinite(manualScore)
             ? manualScore
             : null;
@@ -195,67 +315,68 @@ export function AddCombatant() {
         disposition,
         side: isBt ? side.trim() || (role === 'pc' ? 'Players' : 'OpFor') : role === 'pc' ? 'Players' : 'OpFor',
         initiative,
-        initMod: modifier,
-        tiebreak: modifier,
-        hp: track(isBt ? 0 : hpValue),
-        secondary: track(isBt || !secondaryLabel ? 0 : secondaryValue),
-        resolve: system.showResolve ? resolveValue : 0,
-        armor: track(isBt ? armorValue : 0),
-        structure: track(isBt ? structureValue : 0),
-        ac: acValue,
-        eac: eacValue,
-        kac: kacValue,
-        shield: shieldValue,
-        saves: saveValues,
-        dr: drValue,
-        sr: srValue,
-        fort: fortValue,
-        reflex: reflexValue,
-        con: conValue,
-        regen: regenValue,
-        cr: crValue,
-        spellDC: spellDCValue,
+        initMod: values.modifier,
+        tiebreak: values.modifier,
+        hp: track(isBt ? 0 : values.hpValue),
+        secondary: track(isBt || !secondaryLabel ? 0 : values.secondaryValue),
+        resolve: system.showResolve ? values.resolveValue : 0,
+        armor: track(isBt ? values.armorValue : 0),
+        structure: track(isBt ? values.structureValue : 0),
+        ac: values.acValue,
+        eac: values.eacValue,
+        kac: values.kacValue,
+        shield: values.shieldValue,
+        saves: values.saveValues,
+        dr: values.drValue,
+        sr: values.srValue,
+        fort: values.fortValue,
+        reflex: values.reflexValue,
+        con: values.conValue,
+        regen: values.regenValue,
+        cr: values.crValue,
+        spellDC: values.spellDCValue,
       };
     });
 
-    const template: CombatantTemplate = {
-      name: baseName,
-      role,
-      disposition,
-      side: isBt ? side.trim() || (role === 'pc' ? 'Players' : 'OpFor') : role === 'pc' ? 'Players' : 'OpFor',
-      initMod: modifier,
-      tiebreak: modifier,
-      hpMax: hpValue,
-      secondaryMax: secondaryValue,
-      resolve: resolveValue,
-      armor: armorValue,
-      structure: structureValue,
-      ac: acValue,
-      eac: eacValue,
-      kac: kacValue,
-      shield: shieldValue,
-      saves: saveValues,
-      dr: drValue,
-      sr: srValue,
-      fort: fortValue,
-      reflex: reflexValue,
-      con: conValue,
-      regen: regenValue,
-      cr: crValue,
-      spellDC: spellDCValue,
-    };
-
-    addCombatants(drafts, template);
+    addCombatants(drafts, makeTemplate(values));
     setName('');
     setScore('');
     nameRef.current?.focus();
+  };
+
+  // Load a library entry into the form for editing.
+  const editTemplate = useCallback(
+    (template: CombatantTemplate) => {
+      loadTemplate(template);
+      setLibraryOpen(false);
+    },
+    [loadTemplate],
+  );
+
+  const saveTemplate = () => {
+    if (!editing) return;
+    const template = makeTemplate(computeValues());
+    updateTemplate(editing.role, editing.name, template);
+    notify(`Saved ${template.name}`);
+  };
+
+  const cancelEdit = () => {
+    setEditing(null);
+    resetDefaults();
+    setName('');
+  };
+
+  const deleteTemplate = (template: { role: Role; name: string }) => {
+    removeTemplate(template.role, template.name);
+    notify(`Deleted ${template.name}`);
+    if (editing?.role === template.role && editing?.name === template.name) setEditing(null);
   };
 
   const sides = sideNames(encounter);
   const addLabel = `Add ${toInt(quantity, 1) > 1 ? `${toInt(quantity, 1)} combatants` : 'combatant'}`;
 
   return (
-    <section className={`panel add-panel ${collapsed ? 'add-panel--collapsed' : ''}`}>
+    <section className={`panel add-panel ${collapsed || libraryOpen ? 'add-panel--collapsed' : ''}`}>
       <div className="panel-head">
         <div>
           <h2>Add combatant</h2>
@@ -266,7 +387,7 @@ export function AddCombatant() {
           </p>
         </div>
         <div className="panel-head-controls">
-          {!isBt ? (
+          {!isBt && !libraryOpen ? (
             <label className="check">
               <input
                 type="checkbox"
@@ -278,8 +399,21 @@ export function AddCombatant() {
           ) : null}
           <button
             type="button"
+            className="icon-btn library-toggle"
+            onClick={() => setLibraryOpen((open) => !open)}
+            aria-expanded={libraryOpen}
+            aria-label="Toggle template library"
+            title={libraryOpen ? 'Close library' : 'Edit template library'}
+          >
+            📚
+          </button>
+          <button
+            type="button"
             className="icon-btn collapse-toggle"
-            onClick={() => setCollapsed((open) => !open)}
+            onClick={() => {
+              setCollapsed((open) => !open);
+              setLibraryOpen(false);
+            }}
             aria-expanded={!collapsed}
             aria-label={collapsed ? 'Expand form' : 'Collapse form'}
             title={collapsed ? 'Expand form' : 'Collapse form'}
@@ -698,17 +832,43 @@ export function AddCombatant() {
           </div>
         </div>
 
-        <div className="add-footer">
-          <button type="submit" className="btn primary">
-            <span aria-hidden="true">+</span> {addLabel}
-          </button>
-          <span className="muted">
-            {isBt
-              ? 'Units on the same side share a 2d6 initiative roll.'
-              : 'Set quantity to add numbered copies of a monster.'}
-          </span>
-        </div>
+        {editing ? (
+          <div className="add-footer">
+            <button type="button" className="btn primary" onClick={saveTemplate}>
+              <span aria-hidden="true">✓</span> Save template
+            </button>
+            <button type="button" className="btn" onClick={cancelEdit}>
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="btn danger small"
+              aria-label={`Delete ${editing.name}`}
+              onClick={() => deleteTemplate(editing)}
+            >
+              Delete
+            </button>
+            <span className="muted">
+              Editing {editing.name}. Saving updates the library entry used by the dropdown.
+            </span>
+          </div>
+        ) : (
+          <div className="add-footer">
+            <button type="submit" className="btn primary">
+              <span aria-hidden="true">+</span> {addLabel}
+            </button>
+            <span className="muted">
+              {isBt
+                ? 'Units on the same side share a 2d6 initiative roll.'
+                : 'Set quantity to add numbered copies of a monster.'}
+            </span>
+          </div>
+        )}
       </form>
+
+      {libraryOpen ? (
+        <Library templates={templates} onEdit={editTemplate} onDelete={deleteTemplate} />
+      ) : null}
     </section>
   );
 }

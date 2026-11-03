@@ -173,6 +173,25 @@ export function addTemplates(
 }
 
 /**
+ * Remove duplicate entries from a template list, keeping the first of any
+ * `(role, name)` collision. Editing a template can rename it onto an existing
+ * entry, so this keeps the library a clean set keyed by `(role, name)`. A new
+ * array is returned; the input list is left untouched.
+ */
+export function dedupeTemplates(templates: CombatantTemplate[]): CombatantTemplate[] {
+  const seen = new Set<string>();
+  const next: CombatantTemplate[] = [];
+  for (const template of templates) {
+    const key = `${template.role}:${template.name}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      next.push(template);
+    }
+  }
+  return next;
+}
+
+/**
  * Collect the PCs to export: every PC in the library plus every PC currently
  * present in an encounter, de-duplicated by (role, name). Exporting from the
  * encounter too means PCs that live only in the combat list (for example ones
