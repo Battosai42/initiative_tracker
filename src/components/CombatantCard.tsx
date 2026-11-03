@@ -205,6 +205,7 @@ export function CombatantCard({ combatant }: { combatant: Combatant }) {
     damage,
     heal,
     adjustPool,
+    setPool,
     setTempHp,
     removeCondition,
     setSide,
@@ -342,6 +343,15 @@ export function CombatantCard({ combatant }: { combatant: Combatant }) {
   const primaryHeal = (amount: number) => {
     if (system.id === 'shadowrun') adjustPool(combatant.id, 'hp', amount);
     else heal(combatant.id, amount);
+  };
+
+  const restoreAll = () => {
+    setPool(combatant.id, 'hp', combatant.hp.max);
+    if (showSecondary) setPool(combatant.id, 'secondary', combatant.secondary.max);
+    if (isBt) {
+      setPool(combatant.id, 'armor', combatant.armor.max);
+      setPool(combatant.id, 'structure', combatant.structure.max);
+    }
   };
 
   const classes = ['combatant'];
@@ -730,6 +740,15 @@ export function CombatantCard({ combatant }: { combatant: Combatant }) {
                 </button>
                 <button type="button" className="btn small" onClick={() => applyCustom(1)}>
                   Heal
+                </button>
+                <button
+                  type="button"
+                  className="btn small"
+                  onClick={restoreAll}
+                  title="Restore HP, Stamina and armor/structure to full"
+                  aria-label="Restore health monitors to full"
+                >
+                  Restore
                 </button>
               </div>
 
