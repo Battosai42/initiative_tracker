@@ -832,9 +832,23 @@ p {
   font-size: 12px;
 }
 
+.dead-toggle {
+  width: 36px;
+  height: 36px;
+  font-size: 18px;
+  color: color-mix(in srgb, var(--bad) 45%, var(--muted));
+  border-color: color-mix(in srgb, var(--bad) 24%, var(--line));
+}
+
 .dead-toggle:hover {
   color: var(--bad);
   background: color-mix(in srgb, var(--bad) 10%, transparent);
+}
+
+.dead-toggle[aria-pressed='true'] {
+  color: var(--bad);
+  background: color-mix(in srgb, var(--bad) 14%, transparent);
+  border-color: color-mix(in srgb, var(--bad) 55%, var(--line));
 }
 
 .empty {
@@ -1289,7 +1303,7 @@ button.disposition-tag:hover {
 
 .track-head {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 8px;
 }
@@ -1300,6 +1314,13 @@ button.disposition-tag:hover {
   letter-spacing: 0.09em;
   text-transform: uppercase;
   color: var(--muted);
+}
+
+.track-side {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
 }
 
 .track-numbers {
@@ -1374,10 +1395,32 @@ button.disposition-tag:hover {
   background: color-mix(in srgb, var(--bad) 70%, var(--line));
 }
 
-.track-actions {
-  display: flex;
-  gap: 4px;
-  margin-top: 5px;
+.track-delta {
+  width: 62px;
+  padding: 3px 6px;
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--line));
+  border-radius: 7px;
+  background: var(--bg-soft);
+  color: var(--text);
+  font-family: ui-monospace, 'SF Mono', 'Cascadia Code', monospace;
+  font-size: 12px;
+  font-weight: 750;
+  line-height: 1.3;
+  text-align: center;
+}
+
+.track-delta::placeholder {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.track-delta:hover {
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--line));
+}
+
+.track-delta:focus {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 7%, var(--bg));
 }
 
 .qbtn {

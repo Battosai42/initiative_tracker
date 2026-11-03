@@ -79,10 +79,11 @@ npm run test:watch
 - D&D and generic systems subtract damage from temporary HP first, then current HP.
 - Starfinder 1e drains Stamina before HP.
 - Battletech strips armor before internal structure; zero structure marks the unit destroyed.
-- Shadowrun's Physical and Stun monitors are adjusted independently in the expanded card.
+- Shadowrun's Physical and Stun monitors are adjusted independently with the field on each track.
 
-Use the `−5`, `−1`, `+1`, `+5` buttons for quick changes, or expand a card to apply a custom
-amount, edit notes, set temporary HP/Resolve, adjust heat and pilot hits, and add conditions.
+Use the `±` field beside a track to change it: type a negative number (e.g. `-5`) to damage or a
+positive number (e.g. `5`) to heal, then press **Enter**. Expand a card to apply a custom amount,
+edit notes, set temporary HP/Resolve, adjust heat and pilot hits, and add conditions.
 
 ### Saved data and moving between browsers
 

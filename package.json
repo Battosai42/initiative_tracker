@@ -21,7 +21,7 @@
     "battletech"
   ],
   "author": "",
-  "license": "MIT",
+  "license": "GPL-3.0-only",
   "dependencies": {
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
