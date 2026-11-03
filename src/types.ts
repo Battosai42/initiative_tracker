@@ -10,6 +10,10 @@ export type Role = 'pc' | 'monster' | 'npc';
 
 export type Disposition = 'friendly' | 'neutral' | 'unfriendly';
 
+export type SaveKey = 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha';
+
+export type SavingThrows = Record<SaveKey, number>;
+
 export interface Track {
   current: number;
   max: number;
@@ -43,6 +47,10 @@ export interface CombatantTemplate {
   ac: number;
   eac: number;
   kac: number;
+  /** PF2e shield value shown beside AC. */
+  shield: number;
+  /** D&D 5e saving throw modifiers. */
+  saves: SavingThrows;
   dr: number;
   sr: number;
   fort: number;
@@ -67,6 +75,10 @@ export interface Combatant {
   eac: number;
   /** Starfinder Kinetic Armor Class. */
   kac: number;
+  /** PF2e shield value shown beside AC. */
+  shield: number;
+  /** D&D 5e saving throw modifiers. */
+  saves: SavingThrows;
   hp: Track;
   secondary: Track;
   resolve: number;

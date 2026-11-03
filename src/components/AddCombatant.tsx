@@ -3,7 +3,8 @@ import { useStore } from '../state/store';
 import { defaultDisposition, track } from '../lib/factory';
 import { rollInitiativeScore } from '../lib/dice';
 import { sideNames } from '../lib/battletech';
-import type { CombatantTemplate, Disposition, Role } from '../types';
+import { defaultSaves, SAVE_KEYS, SAVE_INFO, savesToDrafts } from '../data/saves';
+import type { CombatantTemplate, Disposition, Role, SavingThrows } from '../types';
 
 const ROLE_LABELS: Record<Role, string> = {
   pc: 'PC',
@@ -59,6 +60,8 @@ export function AddCombatant() {
   const [fort, setFort] = useState('0');
   const [reflex, setReflex] = useState('0');
   const [con, setCon] = useState('0');
+  const [shield, setShield] = useState('0');
+  const [saveDrafts, setSaveDrafts] = useState(() => savesToDrafts());
   const [regen, setRegen] = useState('0');
   const [quantity, setQuantity] = useState('1');
   const nameRef = useRef<HTMLInputElement>(null);
@@ -71,7 +74,7 @@ export function AddCombatant() {
     if (system.id === 'shadowrun') {
       setHpMax('10');
       setSecondaryMax('10');
-    } else if (system.id === 'starfinder1e') {
+    } else if (system.id === 'starfinder1e' || system.id === 'starfinder2e') {
       setHpMax('10');
       setSecondaryMax('10');
       setDr('0');
@@ -79,6 +82,7 @@ export function AddCombatant() {
       setFort('0');
       setReflex('0');
       setCon('0');
+      setShield('0');
       setRegen('0');
     } else {
       setSecondaryMax('5');
@@ -91,6 +95,7 @@ export function AddCombatant() {
     setAc('10');
     setEac('10');
     setKac('10');
+    setSaveDrafts(savesToDrafts());
   }, [system.id, isBt]);
 
   useEffect(() => {
@@ -129,6 +134,7 @@ export function AddCombatant() {
     setAc(String(template.ac));
     setEac(String(template.eac));
     setKac(String(template.kac));
+    setSaveDrafts(savesToDrafts(template.saves));
     setDr(String(template.dr));
     setSr(String(template.sr));
     setFort(String(template.fort));
@@ -154,6 +160,10 @@ export function AddCombatant() {
     const acValue = Math.max(0, toInt(ac, 0));
     const eacValue = Math.max(0, toInt(eac, 0));
     const kacValue = Math.max(0, toInt(kac, 0));
+    const shieldValue = Math.max(0, toInt(shield, 0));
+    const saveValues = Object.fromEntries(
+      SAVE_KEYS.map((key) => [key, toInt(saveDrafts[key], 0)]),
+    ) as SavingThrows;
     const drValue = Math.max(0, toInt(dr, 0));
     const srValue = Math.max(0, toInt(sr, 0));
     const fortValue = toInt(fort, 0);
@@ -187,6 +197,8 @@ export function AddCombatant() {
         ac: acValue,
         eac: eacValue,
         kac: kacValue,
+        shield: shieldValue,
+        saves: saveValues,
         dr: drValue,
         sr: srValue,
         fort: fortValue,
@@ -211,6 +223,8 @@ export function AddCombatant() {
       ac: acValue,
       eac: eacValue,
       kac: kacValue,
+      shield: shieldValue,
+      saves: saveValues,
       dr: drValue,
       sr: srValue,
       fort: fortValue,
@@ -428,17 +442,97 @@ export function AddCombatant() {
               ) : null}
 
               {system.id === 'dnd5e' ? (
-                <div className="field">
-                  <label htmlFor="add-ac">AC</label>
-                  <input
-                    id="add-ac"
-                    type="number"
-                    min={0}
-                    value={ac}
-                    onChange={(event) => setAc(event.target.value)}
-                    title="Armor Class"
-                  />
-                </div>
+                <>
+                  <div className="field">
+                    <label htmlFor="add-ac">AC</label>
+                    <input
+                      id="add-ac"
+                      type="number"
+                      min={0}
+                      value={ac}
+                      onChange={(event) => setAc(event.target.value)}
+                      title="Armor Class"
+                    />
+                  </div>
+                  <div className="field save-fields">
+                    <span className="field-label">Saving throws</span>
+                    <div className="save-inputs">
+                      {SAVE_KEYS.map((key) => (
+                        <label className="save-field" key={key} title={SAVE_INFO[key].title}>
+                          <span>{SAVE_INFO[key].label}</span>
+                          <input
+                            type="number"
+                            value={saveDrafts[key]}
+                            onChange={(event) =>
+                              setSaveDrafts((current) => ({
+                                ...current,
+                                [key]: event.target.value,
+                              }))
+                            }
+                            aria-label={SAVE_INFO[key].title}
+                          />
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              ) : null}
+
+              {system.id === 'starfinder2e' ? (
+                <>
+                  <div className="field">
+                    <label htmlFor="add-ac">AC</label>
+                    <input
+                      id="add-ac"
+                      type="number"
+                      min={0}
+                      value={ac}
+                      onChange={(event) => setAc(event.target.value)}
+                      title="Armor Class"
+                    />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="add-shield">Shield</label>
+                    <input
+                      id="add-shield"
+                      type="number"
+                      min={0}
+                      value={shield}
+                      onChange={(event) => setShield(event.target.value)}
+                      title="Shield bonus"
+                    />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="add-fort">Fort</label>
+                    <input
+                      id="add-fort"
+                      type="number"
+                      value={fort}
+                      onChange={(event) => setFort(event.target.value)}
+                      title="Fortitude save"
+                    />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="add-reflex">Reflex</label>
+                    <input
+                      id="add-reflex"
+                      type="number"
+                      value={reflex}
+                      onChange={(event) => setReflex(event.target.value)}
+                      title="Reflex save"
+                    />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="add-con">Con</label>
+                    <input
+                      id="add-con"
+                      type="number"
+                      value={con}
+                      onChange={(event) => setCon(event.target.value)}
+                      title="Constitution save"
+                    />
+                  </div>
+                </>
               ) : null}
 
               {system.id === 'starfinder1e' ? (

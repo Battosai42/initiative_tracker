@@ -7,10 +7,12 @@ import {
   type Disposition,
   type Encounter,
   type Role,
+  type SavingThrows,
   type SystemId,
   type Track,
 } from '../types';
 import { SYSTEMS } from '../data/systems';
+import { defaultSaves } from '../data/saves';
 
 let counter = 0;
 
@@ -63,6 +65,8 @@ export function createCombatant(partial: Partial<Combatant> = {}): Combatant {
     ac: 0,
     eac: 0,
     kac: 0,
+    shield: 0,
+    saves: defaultSaves(),
     dr: 0,
     sr: 0,
     fort: 0,
@@ -130,6 +134,8 @@ export function combatantToTemplate(combatant: Combatant): CombatantTemplate {
     ac: combatant.ac,
     eac: combatant.eac,
     kac: combatant.kac,
+    shield: combatant.shield,
+    saves: { ...combatant.saves },
     dr: combatant.dr,
     sr: combatant.sr,
     fort: combatant.fort,
@@ -220,6 +226,18 @@ function normTrack(value: unknown, fallbackMax = 0): Track {
   };
 }
 
+function normSaves(value: unknown): SavingThrows {
+  const raw = record(value);
+  return {
+    str: Math.round(num(raw.str, 0)),
+    dex: Math.round(num(raw.dex, 0)),
+    con: Math.round(num(raw.con, 0)),
+    int: Math.round(num(raw.int, 0)),
+    wis: Math.round(num(raw.wis, 0)),
+    cha: Math.round(num(raw.cha, 0)),
+  };
+}
+
 function normConditions(value: unknown): ConditionInstance[] {
   if (!Array.isArray(value)) return [];
   return value.flatMap((entry) => {
@@ -260,6 +278,8 @@ export function normalizeTemplate(value: unknown): CombatantTemplate | null {
     ac: Math.max(0, Math.round(num(raw.ac, 0))),
     eac: Math.max(0, Math.round(num(raw.eac, 0))),
     kac: Math.max(0, Math.round(num(raw.kac, 0))),
+    shield: Math.max(0, Math.round(num(raw.shield, 0))),
+    saves: normSaves(raw.saves),
     dr: Math.max(0, Math.round(num(raw.dr, 0))),
     sr: Math.max(0, Math.round(num(raw.sr, 0))),
     fort: Math.round(num(raw.fort, 0)),
@@ -306,6 +326,8 @@ export function normalizeCombatant(value: unknown, remapIds = false): Combatant 
     ac: Math.max(0, Math.round(num(raw.ac, 0))),
     eac: Math.max(0, Math.round(num(raw.eac, 0))),
     kac: Math.max(0, Math.round(num(raw.kac, 0))),
+    shield: Math.max(0, Math.round(num(raw.shield, 0))),
+    saves: normSaves(raw.saves),
     dr: Math.max(0, Math.round(num(raw.dr, 0))),
     sr: Math.max(0, Math.round(num(raw.sr, 0))),
     fort: Math.round(num(raw.fort, 0)),

@@ -555,7 +555,8 @@ p {
   flex: 0 1 auto;
 }
 
-.field > label {
+.field > label,
+.field-label {
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.07em;
@@ -577,6 +578,32 @@ p {
 .field-qty {
   min-width: 66px;
   max-width: 76px;
+}
+
+.save-inputs {
+  display: flex;
+  gap: 6px;
+}
+
+.save-field {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.save-field span {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.save-field input {
+  width: 44px;
+  padding: 8px 4px;
+  text-align: center;
 }
 
 .check {
@@ -1513,6 +1540,15 @@ button.disposition-tag:hover {
   margin-left: 18px;
 }
 
+.ac-row-label {
+  align-self: center;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
 .ac-cell .mini-label {
   margin-bottom: 2px;
 }
@@ -1539,6 +1575,29 @@ button.disposition-tag:hover {
 .ac-input[type='number'] {
   -moz-appearance: textfield;
   appearance: textfield;
+}
+
+/* PF2e: AC shown alongside an inline shield bonus */
+.ac-shield {
+  min-width: 76px;
+}
+
+.ac-shield .shield-row {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin-top: 5px;
+}
+
+.ac-shield .shield-glyph {
+  font-size: 12px;
+  line-height: 1;
+}
+
+.ac-input--shield {
+  width: 36px;
+  font-size: 13px;
+  font-weight: 700;
 }
 
 /* ------------------------------------------------------------------ */

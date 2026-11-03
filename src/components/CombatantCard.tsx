@@ -6,6 +6,7 @@ import { activeSide as battletechActiveSide } from '../lib/battletech';
 import { TrackRow } from './TrackRow';
 import { ConditionEditor } from './ConditionEditor';
 import { CommitNumberInput } from './CommitNumberInput';
+import { SAVE_KEYS, SAVE_INFO } from '../data/saves';
 
 const ROLE_LABELS: Record<Combatant['role'], string> = {
   pc: 'PC',
@@ -66,10 +67,12 @@ interface AcStatProps {
   min?: number;
   /** Extra classes merged onto the cell (e.g. to add spacing). */
   className?: string;
+  /** Longer description used as a tooltip and accessible label. */
+  title?: string;
 }
 
 /** A compact, editable armor-stat cell: AC/EAC/KAC/DR/SR (min 0) or a saving throw (may be negative). */
-function AcStat({ label, value, onChange, min = 0, className }: AcStatProps) {
+function AcStat({ label, value, onChange, min = 0, className, title }: AcStatProps) {
   const [draft, setDraft] = useState(String(value));
 
   useEffect(() => setDraft(String(value)), [value]);
@@ -86,7 +89,7 @@ function AcStat({ label, value, onChange, min = 0, className }: AcStatProps) {
   };
 
   return (
-    <div className={className ? `ac-cell ${className}` : 'ac-cell'}>
+    <div className={className ? `ac-cell ${className}` : 'ac-cell'} title={title}>
       <span className="mini-label">{label}</span>
       <input
         className="ac-input"
@@ -102,8 +105,87 @@ function AcStat({ label, value, onChange, min = 0, className }: AcStatProps) {
             event.currentTarget.blur();
           }
         }}
-        aria-label={`${label} value`}
+        aria-label={title ?? `${label} value`}
       />
+    </div>
+  );
+}
+
+interface AcShieldProps {
+  ac: number;
+  shield: number;
+  onAcChange: (value: number) => void;
+  onShieldChange: (value: number) => void;
+}
+
+/** PF2e: a combined AC cell with an inline shield bonus, both editable (min 0). */
+function AcShield({ ac, shield, onAcChange, onShieldChange }: AcShieldProps) {
+  const [acDraft, setAcDraft] = useState(String(ac));
+  const [shieldDraft, setShieldDraft] = useState(String(shield));
+
+  useEffect(() => setAcDraft(String(ac)), [ac]);
+  useEffect(() => setShieldDraft(String(shield)), [shield]);
+
+  const commitAc = () => {
+    const parsed = Number.parseInt(acDraft, 10);
+    if (!Number.isFinite(parsed)) {
+      setAcDraft(String(ac));
+      return;
+    }
+    const next = Math.max(0, Math.round(parsed));
+    setAcDraft(String(next));
+    if (next !== ac) onAcChange(next);
+  };
+
+  const commitShield = () => {
+    const parsed = Number.parseInt(shieldDraft, 10);
+    if (!Number.isFinite(parsed)) {
+      setShieldDraft(String(shield));
+      return;
+    }
+    const next = Math.max(0, Math.round(parsed));
+    setShieldDraft(String(next));
+    if (next !== shield) onShieldChange(next);
+  };
+
+  return (
+    <div className="ac-cell ac-shield" title="Armor Class (shield bonus included)">
+      <span className="mini-label">AC</span>
+      <input
+        className="ac-input"
+        type="number"
+        min={0}
+        value={acDraft}
+        onChange={(event) => setAcDraft(event.target.value)}
+        onBlur={commitAc}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') event.currentTarget.blur();
+          if (event.key === 'Escape') {
+            setAcDraft(String(ac));
+            event.currentTarget.blur();
+          }
+        }}
+        aria-label="Armor Class"
+      />
+      <span className="shield-row">
+        <span className="shield-glyph" aria-hidden="true">🛡</span>
+        <input
+          className="ac-input ac-input--shield"
+          type="number"
+          min={0}
+          value={shieldDraft}
+          onChange={(event) => setShieldDraft(event.target.value)}
+          onBlur={commitShield}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') event.currentTarget.blur();
+            if (event.key === 'Escape') {
+              setShieldDraft(String(shield));
+              event.currentTarget.blur();
+            }
+          }}
+          aria-label="Shield"
+        />
+      </span>
     </div>
   );
 }
@@ -462,15 +544,36 @@ export function CombatantCard({ combatant }: { combatant: Combatant }) {
           </>
         ) : (
           <>
-            {(system.id === 'dnd5e' || system.id === 'starfinder1e') ? (
+            {(system.id === 'dnd5e' ||
+              system.id === 'starfinder1e' ||
+              system.id === 'starfinder2e') ? (
               <div className="ac-row">
                 {system.id === 'dnd5e' ? (
-                  <AcStat
-                    label="AC"
-                    value={combatant.ac}
-                    onChange={(next) => updateCombatant(combatant.id, { ac: next })}
-                  />
-                ) : (
+                  <>
+                    <AcStat
+                      label="AC"
+                      value={combatant.ac}
+                      title="Armor Class"
+                      onChange={(next) => updateCombatant(combatant.id, { ac: next })}
+                    />
+                    <span className="ac-row-label">Saves</span>
+                    {SAVE_KEYS.map((key) => (
+                      <AcStat
+                        key={key}
+                        label={SAVE_INFO[key].label}
+                        title={SAVE_INFO[key].title}
+                        value={combatant.saves[key]}
+                        min={-99}
+                        onChange={(next) =>
+                          updateCombatant(combatant.id, (current) => ({
+                            ...current,
+                            saves: { ...current.saves, [key]: next },
+                          }))
+                        }
+                      />
+                    ))}
+                  </>
+                ) : system.id === 'starfinder1e' ? (
                   <>
                     <AcStat
                       label="EAC"
@@ -511,6 +614,37 @@ export function CombatantCard({ combatant }: { combatant: Combatant }) {
                       label="SR"
                       value={combatant.sr}
                       onChange={(next) => updateCombatant(combatant.id, { sr: next })}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <AcShield
+                      ac={combatant.ac}
+                      shield={combatant.shield}
+                      onAcChange={(next) => updateCombatant(combatant.id, { ac: next })}
+                      onShieldChange={(next) => updateCombatant(combatant.id, { shield: next })}
+                    />
+                    <span className="ac-row-label">Saves</span>
+                    <AcStat
+                      label="Fort"
+                      value={combatant.fort}
+                      min={-99}
+                      title="Fortitude saving throw"
+                      onChange={(next) => updateCombatant(combatant.id, { fort: next })}
+                    />
+                    <AcStat
+                      label="Reflex"
+                      value={combatant.reflex}
+                      min={-99}
+                      title="Reflex saving throw"
+                      onChange={(next) => updateCombatant(combatant.id, { reflex: next })}
+                    />
+                    <AcStat
+                      label="Con"
+                      value={combatant.con}
+                      min={-99}
+                      title="Constitution saving throw"
+                      onChange={(next) => updateCombatant(combatant.id, { con: next })}
                     />
                   </>
                 )}

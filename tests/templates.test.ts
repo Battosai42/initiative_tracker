@@ -39,6 +39,8 @@ describe('combatantToTemplate', () => {
       ac: 15,
       eac: 12,
       kac: 14,
+      shield: 0,
+      saves: { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 },
       dr: 0,
       sr: 0,
       fort: 0,
@@ -74,6 +76,57 @@ describe('combatant AC fields', () => {
     expect(knight?.ac).toBe(18);
     expect(knight?.eac).toBe(15);
     expect(knight?.kac).toBe(0);
+  });
+});
+
+describe('combatant saving throws', () => {
+  it('defaults all saving throw modifiers to zero', () => {
+    const combatant = createCombatant({ name: 'Draft' });
+    expect(combatant.saves).toEqual({ str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 });
+  });
+
+  it('captures saving throw modifiers in the template', () => {
+    const combatant = createCombatant({
+      name: 'Aria',
+      role: 'pc',
+      saves: { str: -1, dex: 5, con: 2, int: 0, wis: 3, cha: -2 },
+    });
+    expect(combatantToTemplate(combatant).saves).toEqual({
+      str: -1,
+      dex: 5,
+      con: 2,
+      int: 0,
+      wis: 3,
+      cha: -2,
+    });
+  });
+
+  it('rounds saving throw modifiers and defaults missing values on load', () => {
+    const data = normalizeAppData(
+      {
+        encounters: [
+          {
+            name: 'A',
+            system: 'dnd5e',
+            combatants: [
+              { name: 'Knight', saves: { str: 2.6, dex: -1.4, con: 4, int: -2, wis: 1, cha: 0 } },
+              { name: 'Old Hero' },
+            ],
+          },
+        ],
+      },
+      true,
+    );
+    const knight = data?.encounters[0].combatants[0];
+    expect(knight?.saves).toEqual({ str: 3, dex: -1, con: 4, int: -2, wis: 1, cha: 0 });
+    expect(data?.encounters[0].combatants[1]?.saves).toEqual({
+      str: 0,
+      dex: 0,
+      con: 0,
+      int: 0,
+      wis: 0,
+      cha: 0,
+    });
   });
 });
 
@@ -158,6 +211,8 @@ describe('normalizeAppData templates', () => {
         ac: 12,
         eac: 0,
         kac: 0,
+        shield: 0,
+        saves: { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 },
         dr: 0,
         sr: 0,
         fort: 0,
