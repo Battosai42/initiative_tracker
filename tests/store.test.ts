@@ -61,6 +61,32 @@ describe('updateTemplate reducer', () => {
     expect(next.data.templates[0].ac).toBe(22);
   });
 
+  it('syncs numbered copies of a template as well as the base name', () => {
+    const goblin = createCombatant({ name: 'Goblin 1', role: 'monster' });
+    const goblin2 = createCombatant({ name: 'Goblin 2', role: 'monster' });
+    const template = { ...combatantToTemplate(goblin), name: 'Goblin' };
+    const state = withCombatants([template], goblin, goblin2);
+
+    const next = reducer(state, {
+      type: 'updateTemplate',
+      role: 'monster',
+      name: 'Goblin',
+      update: {
+        ac: 21,
+        customStats: [
+          { id: 'speed', label: 'Speed', value: '30 ft', showInCollapsed: true },
+        ],
+      },
+    });
+
+    for (const combatant of encounter(next).combatants) {
+      expect(combatant.ac).toBe(21);
+      expect(combatant.customStats).toEqual([
+        { id: 'speed', label: 'Speed', value: '30 ft', showInCollapsed: true },
+      ]);
+    }
+  });
+
   it('preserves each combatant instance state while syncing', () => {
     const goblin = createCombatant({
       name: 'Goblin',

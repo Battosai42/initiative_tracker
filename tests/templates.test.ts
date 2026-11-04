@@ -5,6 +5,7 @@ import {
   combatantToTemplate,
   createCombatant,
   dedupeTemplates,
+  duplicateCombatant,
   normalizeAppData,
 } from '../src/lib/factory';
 import type { Combatant, CombatantTemplate } from '../src/types';
@@ -53,7 +54,101 @@ describe('combatantToTemplate', () => {
       cr: 0,
       spellDC: 0,
       notes: '',
+      customStats: [],
     });
+  });
+});
+
+describe('custom stats', () => {
+  it('defaults to an empty list on new combatants', () => {
+    expect(createCombatant({ name: 'Draft' }).customStats).toEqual([]);
+  });
+
+  it('captures custom stats in templates', () => {
+    const combatant = createCombatant({
+      name: 'Goblin',
+      customStats: [
+        { id: 'stat_speed', label: 'Speed', value: '30 ft', showInCollapsed: true },
+        { id: 'stat_ammo', label: 'Ammo', value: '12', showInCollapsed: false },
+      ],
+    });
+    expect(combatantToTemplate(combatant).customStats).toEqual([
+      { id: 'stat_speed', label: 'Speed', value: '30 ft', showInCollapsed: true },
+      { id: 'stat_ammo', label: 'Ammo', value: '12', showInCollapsed: false },
+    ]);
+  });
+
+  it('normalizes custom stats loaded from disk and drops blank labels', () => {
+    const data = normalizeAppData(
+      {
+        encounters: [
+          {
+            name: 'A',
+            combatants: [
+              {
+                name: 'Goblin',
+                customStats: [
+                  { label: ' Speed ', value: ' 30 ft ', showInCollapsed: true },
+                  { label: '', value: 'ignored' },
+                  { value: 'no label' },
+                ],
+              },
+            ],
+          },
+        ],
+        templates: [
+          {
+            name: 'Goblin',
+            role: 'monster',
+            customStats: [{ label: 'Ammo', value: '12', showInCollapsed: false }],
+          },
+        ],
+      },
+      true,
+    );
+    const stats = data?.encounters[0]?.combatants[0]?.customStats ?? [];
+    expect(
+      stats.map(({ label, value, showInCollapsed }) => ({ label, value, showInCollapsed })),
+    ).toEqual([{ label: 'Speed', value: '30 ft', showInCollapsed: true }]);
+    expect(stats[0]?.id).toBeTruthy();
+    expect(
+      data?.templates[0]?.customStats.map(({ label, value, showInCollapsed }) => ({
+        label,
+        value,
+        showInCollapsed,
+      })),
+    ).toEqual([{ label: 'Ammo', value: '12', showInCollapsed: false }]);
+  });
+
+  it('gives duplicated combatants their own stat ids', () => {
+    const source = createCombatant({
+      name: 'Goblin',
+      customStats: [
+        { id: 'stat_1', label: 'Speed', value: '30', showInCollapsed: true },
+      ],
+    });
+    const copy = duplicateCombatant(source);
+    expect(copy.customStats).toHaveLength(1);
+    expect(copy.customStats[0]?.id).not.toBe('stat_1');
+    expect(copy.customStats[0]?.label).toBe('Speed');
+  });
+
+  it('syncs template custom stats onto matching combatants', () => {
+    const base = createCombatant({
+      name: 'Goblin',
+      customStats: [
+        { id: 'old', label: 'Old', value: '1', showInCollapsed: false },
+      ],
+    });
+    const next = applyTemplateUpdate(base, {
+      customStats: [
+        { id: 'new', label: 'Speed', value: '30 ft', showInCollapsed: true },
+      ],
+    });
+    expect(next.customStats).toEqual([
+      { id: 'new', label: 'Speed', value: '30 ft', showInCollapsed: true },
+    ]);
+    expect(next.customStats).not.toBe(base.customStats);
   });
 });
 
@@ -263,6 +358,7 @@ describe('normalizeAppData templates', () => {
         cr: 0,
         spellDC: 0,
         notes: '',
+        customStats: [],
       },
     ];
     const data = normalizeAppData({ encounters: [{ name: 'A' }], templates }, true);

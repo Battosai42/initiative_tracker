@@ -27,6 +27,15 @@ export interface ConditionInstance {
   rounds: number | null;
 }
 
+/** A user-defined stat shown on a combatant card and stored in its template. */
+export interface CustomStat {
+  id: string;
+  label: string;
+  value: string;
+  /** When true, show the stat on the collapsed card as well as when expanded. */
+  showInCollapsed: boolean;
+}
+
 /**
  * A saved combatant "template" (a.k.a. library entry). It captures the fields
  * needed to re-add the same PC, NPC or monster quickly, without the per-encounter
@@ -63,6 +72,8 @@ export interface CombatantTemplate {
   spellDC: number;
   /** Free-form notes carried from the combatant card. */
   notes: string;
+  /** User-defined stats, e.g. Speed, Ammo or Damage. */
+  customStats: CustomStat[];
 }
 
 export interface Combatant {
@@ -113,6 +124,8 @@ export interface Combatant {
   cr: number;
   /** Starfinder: the spell save DC. */
   spellDC: number;
+  /** User-defined stats, e.g. Speed, Ammo or Damage. */
+  customStats: CustomStat[];
 }
 
 export interface Encounter {

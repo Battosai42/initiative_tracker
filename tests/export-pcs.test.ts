@@ -28,6 +28,7 @@ const aria: CombatantTemplate = {
   cr: 0,
   spellDC: 0,
   notes: '',
+  customStats: [],
 };
 
 const goblin: CombatantTemplate = {
@@ -56,6 +57,7 @@ const goblin: CombatantTemplate = {
   cr: 0,
   spellDC: 0,
   notes: '',
+  customStats: [],
 };
 
 describe('collectExportablePcs', () => {

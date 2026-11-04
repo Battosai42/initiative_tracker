@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { Combatant } from '../types';
+import type { Combatant, CustomStat } from '../types';
 import { useStore } from '../state/store';
 import { healthState } from '../lib/hp';
 import { activeSide as battletechActiveSide } from '../lib/battletech';
@@ -190,6 +190,44 @@ function AcShield({ ac, shield, onAcChange, onShieldChange }: AcShieldProps) {
   );
 }
 
+function CustomStatField({
+  stat,
+  onCommit,
+}: {
+  stat: CustomStat;
+  onCommit: (value: string) => void;
+}) {
+  const [draft, setDraft] = useState(stat.value);
+
+  useEffect(() => setDraft(stat.value), [stat.value]);
+
+  const commit = () => {
+    if (draft !== stat.value) onCommit(draft);
+  };
+
+  return (
+    <label className="custom-stat-row">
+      <span className="custom-stat-label" title={stat.label}>
+        {stat.label}
+      </span>
+      <input
+        value={draft}
+        onChange={(event) => setDraft(event.target.value)}
+        onBlur={commit}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') event.currentTarget.blur();
+          if (event.key === 'Escape') {
+            setDraft(stat.value);
+            event.currentTarget.blur();
+          }
+        }}
+        placeholder="—"
+        aria-label={`${stat.label} value`}
+      />
+    </label>
+  );
+}
+
 export function CombatantCard({ combatant }: { combatant: Combatant }) {
   const {
     system,
@@ -235,6 +273,7 @@ export function CombatantCard({ combatant }: { combatant: Combatant }) {
     (combatant.secondary.max > 0 ||
       system.id === 'starfinder1e' ||
       system.id === 'shadowrun');
+  const collapsedStats = combatant.customStats.filter((stat) => stat.showInCollapsed);
 
   useEffect(() => setNameDraft(combatant.name), [combatant.name]);
   useEffect(() => setNotesDraft(combatant.notes), [combatant.notes]);
@@ -721,6 +760,16 @@ export function CombatantCard({ combatant }: { combatant: Combatant }) {
           </div>
           </>
         )}
+        {collapsedStats.length > 0 ? (
+          <div className="custom-stat-summary">
+            {collapsedStats.map((stat) => (
+              <span className="custom-stat-chip" key={stat.id}>
+                <span>{stat.label}</span>
+                <strong>{stat.value || '—'}</strong>
+              </span>
+            ))}
+          </div>
+        ) : null}
       </div>
 
       {expanded ? (
@@ -959,6 +1008,31 @@ export function CombatantCard({ combatant }: { combatant: Combatant }) {
             </div>
             <ConditionEditor combatantId={combatant.id} presets={system.conditions} />
           </div>
+
+          {combatant.customStats.length > 0 ? (
+            <div className="expanded-section">
+              <div className="section-head">
+                <h4>Custom stats</h4>
+                <span className="muted">Values apply to this combatant only.</span>
+              </div>
+              <div className="custom-stat-list">
+                {combatant.customStats.map((stat) => (
+                  <CustomStatField
+                    key={stat.id}
+                    stat={stat}
+                    onCommit={(value) =>
+                      updateCombatant(combatant.id, (current) => ({
+                        ...current,
+                        customStats: current.customStats.map((entry) =>
+                          entry.id === stat.id ? { ...entry, value } : entry,
+                        ),
+                      }))
+                    }
+                  />
+                ))}
+              </div>
+            </div>
+          ) : null}
 
           <div className="card-footer">
             <button

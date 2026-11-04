@@ -4,6 +4,7 @@ import {
   type Combatant,
   type CombatantTemplate,
   type ConditionInstance,
+  type CustomStat,
   type Disposition,
   type Encounter,
   type Role,
@@ -75,6 +76,7 @@ export function createCombatant(partial: Partial<Combatant> = {}): Combatant {
     regen: 0,
     cr: 0,
     spellDC: 0,
+    customStats: [],
     ...partial,
   };
 }
@@ -113,6 +115,7 @@ export function duplicateCombatant(source: Combatant): Combatant {
     id: uid('c'),
     name: `${source.name} (copy)`,
     conditions: source.conditions.map((condition) => ({ ...condition, id: uid('cond') })),
+    customStats: source.customStats.map((stat) => ({ ...stat, id: uid('stat') })),
   };
 }
 
@@ -147,6 +150,7 @@ export function combatantToTemplate(combatant: Combatant): CombatantTemplate {
     cr: combatant.cr,
     spellDC: combatant.spellDC,
     notes: combatant.notes,
+    customStats: combatant.customStats.map((stat) => ({ ...stat })),
   };
 }
 
@@ -248,6 +252,9 @@ export function applyTemplateUpdate(
   if (update.cr !== undefined) next.cr = update.cr;
   if (update.spellDC !== undefined) next.spellDC = update.spellDC;
   if (update.notes !== undefined) next.notes = update.notes;
+  if (update.customStats !== undefined) {
+    next.customStats = update.customStats.map((stat) => ({ ...stat }));
+  }
 
   if (update.hpMax !== undefined) {
     next.hp.max = update.hpMax;
@@ -362,6 +369,23 @@ function normSaves(value: unknown): SavingThrows {
   };
 }
 
+function normCustomStats(value: unknown): CustomStat[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((entry) => {
+    const raw = record(entry);
+    const label = str(raw.label).trim().slice(0, 60);
+    if (!label) return [];
+    return [
+      {
+        id: uid('stat'),
+        label,
+        value: str(raw.value).trim().slice(0, 200),
+        showInCollapsed: bool(raw.showInCollapsed),
+      },
+    ];
+  });
+}
+
 function normConditions(value: unknown): ConditionInstance[] {
   if (!Array.isArray(value)) return [];
   return value.flatMap((entry) => {
@@ -413,6 +437,7 @@ export function normalizeTemplate(value: unknown): CombatantTemplate | null {
     cr: Math.max(0, Math.round(num(raw.cr, 0))),
     spellDC: Math.max(0, Math.round(num(raw.spellDC, 0))),
     notes: str(raw.notes).slice(0, 4000),
+    customStats: normCustomStats(raw.customStats),
   };
 }
 
@@ -463,6 +488,7 @@ export function normalizeCombatant(value: unknown, remapIds = false): Combatant 
     regen: Math.max(0, Math.round(num(raw.regen, 0))),
     cr: Math.max(0, Math.round(num(raw.cr, 0))),
     spellDC: Math.max(0, Math.round(num(raw.spellDC, 0))),
+    customStats: normCustomStats(raw.customStats),
   };
 }
 

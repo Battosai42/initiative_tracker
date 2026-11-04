@@ -612,6 +612,51 @@ p {
   text-align: center;
 }
 
+/* Custom stat definitions in the add form */
+.field-custom-stats {
+  flex: 1 1 100%;
+  min-width: 220px;
+}
+
+.custom-stats-empty {
+  font-size: 11px;
+}
+
+.custom-stat-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.custom-stat-edit {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.custom-stat-edit input:not([type='checkbox']) {
+  flex: 1 1 120px;
+  min-width: 80px;
+  padding: 6px 8px;
+  font-size: 12px;
+}
+
+.custom-stat-edit .btn {
+  flex: 0 0 auto;
+}
+
+.custom-stat-visible {
+  padding-bottom: 0;
+  font-size: 10px;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.custom-stat-add {
+  align-self: flex-start;
+}
+
 .check {
   display: inline-flex;
   align-items: center;
@@ -1774,6 +1819,66 @@ button.disposition-tag:hover {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
   min-width: 0;
+}
+
+/* Custom stats on a combatant card */
+.custom-stat-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.custom-stat-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  padding: 2px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--bg);
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.custom-stat-chip strong {
+  font-family: ui-monospace, 'SF Mono', 'Cascadia Code', monospace;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.custom-stat-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 7px;
+}
+
+.custom-stat-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.custom-stat-row .custom-stat-label {
+  flex: 0 1 auto;
+  max-width: 55%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.custom-stat-row input {
+  flex: 1 1 60px;
+  min-width: 0;
+  padding: 4px 7px;
+  font-size: 12px;
 }
 
 .heat-value {

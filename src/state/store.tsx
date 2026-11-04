@@ -263,7 +263,8 @@ export function reducer(state: State, action: Action): State {
       const undo = { ...state.undo };
       const encounters = state.data.encounters.map((encounter) => {
         const matches = (combatant: Combatant) =>
-          combatant.role === action.role && combatant.name === action.name;
+          combatant.role === action.role &&
+          templateBaseName(combatant.name) === templateBaseName(action.name);
         if (!encounter.combatants.some(matches)) return encounter;
         const synced = {
           ...encounter,

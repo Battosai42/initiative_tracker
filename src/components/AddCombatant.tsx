@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
 import { useStore } from '../state/store';
-import { defaultDisposition, track } from '../lib/factory';
+import { defaultDisposition, track, uid } from '../lib/factory';
 import { rollInitiativeScore } from '../lib/dice';
 import { sideNames } from '../lib/battletech';
 import { defaultSaves, SAVE_KEYS, SAVE_INFO, savesToDrafts } from '../data/saves';
-import type { CombatantTemplate, Disposition, Role, SavingThrows } from '../types';
+import type { CombatantTemplate, CustomStat, Disposition, Role, SavingThrows } from '../types';
 
 const ROLE_LABELS: Record<Role, string> = {
   pc: 'PC',
@@ -124,6 +124,7 @@ export function AddCombatant() {
   const [cr, setCr] = useState('0');
   const [spellDC, setSpellDC] = useState('0');
   const [notes, setNotes] = useState('');
+  const [customStats, setCustomStats] = useState<CustomStat[]>([]);
   const [quantity, setQuantity] = useState('1');
   const nameRef = useRef<HTMLInputElement>(null);
   const [collapsed, setCollapsed] = useState(false);
@@ -214,8 +215,26 @@ export function AddCombatant() {
     setCr(String(template.cr));
     setSpellDC(String(template.spellDC));
     setNotes(template.notes);
+    setCustomStats(template.customStats.map((stat) => ({ ...stat })));
     setQuantity('1');
   }, []);
+
+  const addCustomStat = () => {
+    setCustomStats((current) => [
+      ...current,
+      { id: uid('stat'), label: '', value: '', showInCollapsed: false },
+    ]);
+  };
+
+  const updateCustomStat = (id: string, update: Partial<CustomStat>) => {
+    setCustomStats((current) =>
+      current.map((stat) => (stat.id === id ? { ...stat, ...update } : stat)),
+    );
+  };
+
+  const removeCustomStat = (id: string) => {
+    setCustomStats((current) => current.filter((stat) => stat.id !== id));
+  };
 
   const computeValues = () => {
     const baseName =
@@ -241,6 +260,13 @@ export function AddCombatant() {
     const regenValue = Math.max(0, toInt(regen, 0));
     const crValue = Math.max(0, toInt(cr, 0));
     const spellDCValue = Math.max(0, toInt(spellDC, 0));
+    const customStatValues = customStats
+      .map((stat) => ({
+        ...stat,
+        label: stat.label.trim(),
+        value: stat.value.trim(),
+      }))
+      .filter((stat) => stat.label !== '');
     return {
       baseName,
       modifier,
@@ -263,6 +289,7 @@ export function AddCombatant() {
       crValue,
       spellDCValue,
       notes: notes.trim(),
+      customStats: customStatValues,
     };
   };
 
@@ -292,6 +319,7 @@ export function AddCombatant() {
     cr: values.crValue,
     spellDC: values.spellDCValue,
     notes: values.notes,
+    customStats: values.customStats.map((stat) => ({ ...stat })),
   });
 
   const handleSubmit = (event: FormEvent) => {
@@ -339,6 +367,7 @@ export function AddCombatant() {
         cr: values.crValue,
         spellDC: values.spellDCValue,
         notes: values.notes,
+        customStats: values.customStats.map((stat) => ({ ...stat })),
       };
     });
 
@@ -346,6 +375,7 @@ export function AddCombatant() {
     setName('');
     setScore('');
     setNotes('');
+    setCustomStats([]);
     nameRef.current?.focus();
   };
 
@@ -371,6 +401,7 @@ export function AddCombatant() {
     resetDefaults();
     setName('');
     setNotes('');
+    setCustomStats([]);
   };
 
   const deleteTemplate = (template: { role: Role; name: string }) => {
@@ -847,6 +878,59 @@ export function AddCombatant() {
               placeholder="Resistances, tactics, ammo, reminders…"
               rows={3}
             />
+          </div>
+
+          <div className="field field-custom-stats">
+            <span className="field-label">Custom stats</span>
+            {customStats.length === 0 ? (
+              <span className="muted custom-stats-empty">
+                Add extra stats such as Speed, Ammo or Damage.
+              </span>
+            ) : (
+              <div className="custom-stat-editor">
+                {customStats.map((stat, index) => (
+                  <div className="custom-stat-edit" key={stat.id}>
+                    <input
+                      value={stat.label}
+                      onChange={(event) => updateCustomStat(stat.id, { label: event.target.value })}
+                      placeholder="Label"
+                      aria-label={`Custom stat ${index + 1} label`}
+                    />
+                    <input
+                      value={stat.value}
+                      onChange={(event) => updateCustomStat(stat.id, { value: event.target.value })}
+                      placeholder="Value"
+                      aria-label={`Custom stat ${index + 1} value`}
+                    />
+                    <label
+                      className="check custom-stat-visible"
+                      title="On: always visible. Off: only visible when the card is expanded."
+                    >
+                      <input
+                        type="checkbox"
+                        checked={stat.showInCollapsed}
+                        onChange={(event) =>
+                          updateCustomStat(stat.id, { showInCollapsed: event.target.checked })
+                        }
+                      />
+                      Show when collapsed
+                    </label>
+                    <button
+                      type="button"
+                      className="btn icon small danger"
+                      onClick={() => removeCustomStat(stat.id)}
+                      aria-label={`Remove custom stat ${index + 1}`}
+                      title="Remove custom stat"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <button type="button" className="btn small custom-stat-add" onClick={addCustomStat}>
+              <span aria-hidden="true">+</span> Add stat
+            </button>
           </div>
         </div>
 
