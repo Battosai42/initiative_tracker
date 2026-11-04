@@ -285,6 +285,21 @@ describe('normalizeAppData templates', () => {
     expect(data?.templates[0]?.hpMax).toBe(12);
     expect(data?.templates[0]?.armor).toBe(0);
   });
+
+  it('collapses numbered copies of the same template on load', () => {
+    const data = normalizeAppData(
+      {
+        encounters: [{ name: 'A' }],
+        templates: [
+          { name: 'Goblin 1', role: 'monster' },
+          { name: 'Goblin 2', role: 'monster' },
+          { name: 'Goblin 3', role: 'monster' },
+        ],
+      },
+      true,
+    );
+    expect(data?.templates.map((entry) => entry.name)).toEqual(['Goblin']);
+  });
 });
 
 describe('addTemplates', () => {
@@ -325,6 +340,25 @@ describe('addTemplates', () => {
     const result = addTemplates([], [goblin, goblin, orc]);
     expect(result.map((entry) => entry.name)).toEqual(['Goblin', 'Orc']);
   });
+
+  it('collapses numbered copies onto one base-named template', () => {
+    const result = addTemplates(
+      [],
+      [
+        { ...goblin, name: 'Goblin 1' },
+        { ...goblin, name: 'Goblin 2' },
+        { ...goblin, name: 'Goblin 3' },
+        orc,
+      ],
+    );
+    expect(result.map((entry) => entry.name)).toEqual(['Goblin', 'Orc']);
+  });
+
+  it('skips numbered copies when the base template already exists', () => {
+    const existing = [combatantToTemplate(goblin)];
+    const result = addTemplates(existing, [{ ...goblin, name: 'Goblin 2' }]);
+    expect(result.map((entry) => entry.name)).toEqual(['Goblin']);
+  });
 });
 
 describe('dedupeTemplates', () => {
@@ -350,6 +384,15 @@ describe('dedupeTemplates', () => {
     const pcGoblin = { ...goblin, role: 'pc' as const };
     const result = dedupeTemplates([goblin, pcGoblin]);
     expect(result.map((entry) => entry.role)).toEqual(['monster', 'pc']);
+  });
+
+  it('collapses numbered copies onto one base-named template', () => {
+    const result = dedupeTemplates([
+      { ...goblin, name: 'Goblin 1' },
+      { ...goblin, name: 'Goblin 2' },
+      orc,
+    ]);
+    expect(result.map((entry) => entry.name)).toEqual(['Goblin', 'Orc']);
   });
 
   it('does not mutate the input list', () => {

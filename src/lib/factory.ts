@@ -151,9 +151,19 @@ export function combatantToTemplate(combatant: Combatant): CombatantTemplate {
 }
 
 /**
+ * Combatants added in multiples are named `<base> 1`, `<base> 2`, and so on.
+ * Template lookups ignore that trailing number so the library keeps one entry
+ * per combatant type instead of one per numbered copy.
+ */
+export function templateBaseName(name: string): string {
+  return name.replace(/\s+\d+$/, '').trim() || name;
+}
+
+/**
  * Merge a template for every combatant into the existing library, skipping any
- * whose (role, name) already exists. Used when importing an encounter so each
- * loaded combatant can be re-added from the dropdown without re-typing. A new
+ * whose `(role, base name)` already exists. Used when importing an encounter so
+ * each loaded combatant can be re-added from the dropdown without re-typing.
+ * Numbered copies collapse onto a single template named after the base. A new
  * array is returned; the input list is left untouched.
  */
 export function addTemplates(
@@ -162,12 +172,13 @@ export function addTemplates(
 ): CombatantTemplate[] {
   const next = [...templates];
   const seen = new Set<string>();
-  for (const entry of templates) seen.add(`${entry.role}:${entry.name}`);
+  for (const entry of templates) seen.add(`${entry.role}:${templateBaseName(entry.name)}`);
   for (const combatant of combatants) {
-    const key = `${combatant.role}:${combatant.name}`;
+    const name = templateBaseName(combatant.name);
+    const key = `${combatant.role}:${name}`;
     if (!seen.has(key)) {
       seen.add(key);
-      next.push(combatantToTemplate(combatant));
+      next.push({ ...combatantToTemplate(combatant), name });
     }
   }
   return next;
@@ -175,18 +186,20 @@ export function addTemplates(
 
 /**
  * Remove duplicate entries from a template list, keeping the first of any
- * `(role, name)` collision. Editing a template can rename it onto an existing
- * entry, so this keeps the library a clean set keyed by `(role, name)`. A new
- * array is returned; the input list is left untouched.
+ * `(role, base name)` collision. Editing a template can rename it onto an
+ * existing entry, so this keeps the library a clean set keyed by
+ * `(role, base name)`. A new array is returned; the input list is left
+ * untouched.
  */
 export function dedupeTemplates(templates: CombatantTemplate[]): CombatantTemplate[] {
   const seen = new Set<string>();
   const next: CombatantTemplate[] = [];
   for (const template of templates) {
-    const key = `${template.role}:${template.name}`;
+    const name = templateBaseName(template.name);
+    const key = `${template.role}:${name}`;
     if (!seen.has(key)) {
       seen.add(key);
-      next.push(template);
+      next.push(name === template.name ? template : { ...template, name });
     }
   }
   return next;
@@ -513,9 +526,11 @@ export function normalizeAppData(value: unknown, remapIds = false): AppData | nu
       : encounters[0].id;
 
   const templates = Array.isArray(raw.templates)
-    ? raw.templates
-      .map((entry) => normalizeTemplate(entry))
-      .filter((template): template is CombatantTemplate => template !== null)
+    ? dedupeTemplates(
+        raw.templates
+          .map((entry) => normalizeTemplate(entry))
+          .filter((template): template is CombatantTemplate => template !== null),
+      )
     : [];
 
   return {

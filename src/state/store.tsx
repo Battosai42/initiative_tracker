@@ -30,6 +30,7 @@ import {
   createEncounter,
   duplicateCombatant,
   duplicateEncounter,
+  templateBaseName,
   uid,
 } from '../lib/factory';
 import {
@@ -449,9 +450,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         return { ...enc, combatants, activeId };
       });
       if (template) {
+        const name = templateBaseName(template.name);
         const existing = state.data.templates;
-        if (!existing.some((entry) => entry.role === template.role && entry.name === template.name)) {
-          dispatch({ type: 'recordTemplates', templates: [...existing, template] });
+        if (
+          !existing.some(
+            (entry) => entry.role === template.role && templateBaseName(entry.name) === name,
+          )
+        ) {
+          dispatch({ type: 'recordTemplates', templates: [...existing, { ...template, name }] });
         }
       }
       notify(

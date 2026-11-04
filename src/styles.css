@@ -580,6 +580,12 @@ p {
   max-width: 76px;
 }
 
+/* Let notes take the leftover width on its row, or the full row when it wraps. */
+.add-grid .field-notes {
+  flex: 1 1 260px;
+  min-width: 200px;
+}
+
 .save-inputs {
   display: flex;
   gap: 6px;
