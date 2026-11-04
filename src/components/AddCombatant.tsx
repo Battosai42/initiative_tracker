@@ -437,13 +437,16 @@ export function AddCombatant() {
           ) : null}
           <button
             type="button"
-            className="icon-btn library-toggle"
+            className={`btn small library-toggle ${libraryOpen ? 'is-open' : ''}`}
             onClick={() => setLibraryOpen((open) => !open)}
             aria-expanded={libraryOpen}
-            aria-label="Toggle template library"
-            title={libraryOpen ? 'Close library' : 'Edit template library'}
+            aria-label={libraryOpen ? 'Close template library' : 'Open template library'}
+            title={libraryOpen ? 'Close library' : 'Open template library'}
           >
-            📚
+            <span className="library-glyph" aria-hidden="true">
+              ▤
+            </span>
+            {libraryOpen ? 'Close library' : 'Library'}
           </button>
           <button
             type="button"

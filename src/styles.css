@@ -448,6 +448,22 @@ p {
   flex: 0 0 auto;
 }
 
+.library-toggle {
+  gap: 6px;
+}
+
+.library-toggle .library-glyph {
+  font-size: 13px;
+  line-height: 1;
+  color: var(--accent);
+}
+
+.library-toggle.is-open {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--line-strong));
+  background: color-mix(in srgb, var(--accent) 12%, var(--bg-soft));
+  color: var(--text);
+}
+
 /* ------------------------------------------------------------------ */
 /* Turn bar (inside the header)                                        */
 /* ------------------------------------------------------------------ */
