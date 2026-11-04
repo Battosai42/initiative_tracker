@@ -36,6 +36,33 @@ export interface CustomStat {
   showInCollapsed: boolean;
 }
 
+/** BattleTech attacker movement choices and their to-hit modifiers. */
+export type BtAttackerMovement = 'stationary' | 'walked' | 'ran' | 'jumped';
+
+/** BattleTech target movement brackets and their to-hit modifiers. */
+export type BtTargetMovement = '0-2' | '3-4' | '5-6' | '7-9' | '10-17' | '18-24' | '25+';
+
+/** BattleTech range brackets and their to-hit modifiers. */
+export type BtRange = 'short' | 'medium' | 'long' | 'extreme';
+
+/**
+ * The GATOR selections for one BattleTech attack. These are per-combatant and
+ * reset only when the player changes them; they are not copied into templates.
+ */
+export interface GatorState {
+  attackerMovement: BtAttackerMovement;
+  targetMovement: BtTargetMovement;
+  targetJumped: boolean;
+  targetImmobile: boolean;
+  range: BtRange;
+  /** Terrain, partial cover, minimum range, damage and other manual modifiers. */
+  other: number;
+  /** Include the combatant's current heat modifier in the total. */
+  useHeat: boolean;
+  /** Include one modifier per pilot hit in the total. */
+  usePilotHits: boolean;
+}
+
 /**
  * A saved combatant "template" (a.k.a. library entry). It captures the fields
  * needed to re-add the same PC, NPC or monster quickly, without the per-encounter
@@ -53,6 +80,9 @@ export interface CombatantTemplate {
   resolve: number;
   armor: number;
   structure: number;
+  /** Battletech: base Gunnery and Piloting skills. */
+  gunnery: number;
+  piloting: number;
   ac: number;
   eac: number;
   kac: number;
@@ -112,6 +142,11 @@ export interface Combatant {
   structure: Track;
   heat: number;
   pilotHits: number;
+  /** Battletech: base Gunnery and Piloting skills. */
+  gunnery: number;
+  piloting: number;
+  /** Battletech: current GATOR attack selections. */
+  gator: GatorState;
   /** Starfinder: damage reduction, spell resistance and saving throws. */
   dr: number;
   sr: number;

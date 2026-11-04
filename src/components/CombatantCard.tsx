@@ -6,7 +6,9 @@ import { activeSide as battletechActiveSide } from '../lib/battletech';
 import { TrackRow } from './TrackRow';
 import { ConditionEditor } from './ConditionEditor';
 import { CommitNumberInput } from './CommitNumberInput';
+import { GatorCalculator } from './GatorCalculator';
 import { SAVE_KEYS, SAVE_INFO } from '../data/saves';
+import { gatorBreakdown } from '../lib/gator';
 
 const ROLE_LABELS: Record<Combatant['role'], string> = {
   pc: 'PC',
@@ -589,6 +591,15 @@ export function CombatantCard({ combatant }: { combatant: Combatant }) {
               <span className={`bt-stat ${combatant.pilotHits >= 3 ? 'warn' : ''}`}>
                 Pilot <strong>{combatant.pilotHits}</strong>/6
               </span>
+              <span className="bt-stat">
+                Gunnery <strong>{combatant.gunnery}</strong>
+              </span>
+              <span className="bt-stat">
+                Piloting <strong>{combatant.piloting}</strong>
+              </span>
+              <span className="bt-stat bt-gator-total">
+                Attack DC <strong>{gatorBreakdown(combatant).total}</strong>
+              </span>
             </div>
           </>
         ) : (
@@ -977,6 +988,8 @@ export function CombatantCard({ combatant }: { combatant: Combatant }) {
               ) : null}
             </div>
           </div>
+
+          {isBt ? <GatorCalculator combatant={combatant} /> : null}
 
           <div className="expanded-section">
             <div className="section-head">

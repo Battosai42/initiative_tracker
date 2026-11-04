@@ -1630,10 +1630,15 @@ button.disposition-tag:hover {
 .bt-summary {
   display: flex;
   align-items: center;
-  gap: 16px;
+  flex-wrap: wrap;
+  gap: 8px 16px;
   margin-top: 7px;
   font-size: 11px;
   color: var(--muted);
+}
+
+.bt-gator-total strong {
+  color: var(--accent);
 }
 
 .bt-stat strong {
@@ -1895,6 +1900,172 @@ button.disposition-tag:hover {
   min-width: 0;
   padding: 4px 7px;
   font-size: 12px;
+}
+
+/* GATOR calculator on BattleTech cards */
+.gator-result {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.gator-result strong {
+  margin: 0 3px;
+  font-family: ui-monospace, 'SF Mono', 'Cascadia Code', monospace;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--accent);
+}
+
+.gator-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.gator-row {
+  display: grid;
+  grid-template-columns: 18px 110px minmax(0, 1fr);
+  gap: 8px;
+  align-items: start;
+}
+
+.gator-key {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.gator-label {
+  padding-top: 4px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.gator-options {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  min-width: 0;
+}
+
+.gator-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 7px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--bg);
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.gator-option:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+  color: var(--text);
+}
+
+.gator-option.is-selected {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--bg));
+  color: var(--text);
+}
+
+.gator-option:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.gator-check {
+  display: inline-block;
+  width: 9px;
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.gator-mod {
+  font-family: ui-monospace, 'SF Mono', 'Cascadia Code', monospace;
+  font-size: 9px;
+  color: var(--muted-2);
+}
+
+.gator-option.is-selected .gator-mod {
+  color: var(--accent);
+}
+
+.gator-mod.warn {
+  color: var(--warn);
+}
+
+.gator-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 7px;
+  border: 1px dashed var(--line);
+  border-radius: 7px;
+  font-size: 10px;
+  color: var(--muted);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.gator-checkbox input {
+  accent-color: var(--accent);
+}
+
+.gator-number {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.gator-number input {
+  width: 52px;
+  padding: 4px 6px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.gator-other input {
+  width: 62px;
+}
+
+.gator-breakdown {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 7px;
+  border-top: 1px dashed var(--line);
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.gator-breakdown strong {
+  font-size: 12px;
+  color: var(--accent);
 }
 
 .heat-value {
@@ -2422,6 +2593,14 @@ kbd {
 
   .track-pair {
     gap: 9px;
+  }
+
+  .gator-row {
+    grid-template-columns: 18px minmax(0, 1fr);
+  }
+
+  .gator-options {
+    grid-column: 1 / -1;
   }
 
   .track {

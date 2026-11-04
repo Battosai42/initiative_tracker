@@ -1,12 +1,16 @@
 import {
   DATA_VERSION,
   type AppData,
+  type BtAttackerMovement,
+  type BtRange,
+  type BtTargetMovement,
   type Combatant,
   type CombatantTemplate,
   type ConditionInstance,
   type CustomStat,
   type Disposition,
   type Encounter,
+  type GatorState,
   type Role,
   type SavingThrows,
   type SystemId,
@@ -14,6 +18,7 @@ import {
 } from '../types';
 import { SYSTEMS } from '../data/systems';
 import { defaultSaves } from '../data/saves';
+import { createGatorState } from './gator';
 
 let counter = 0;
 
@@ -63,6 +68,9 @@ export function createCombatant(partial: Partial<Combatant> = {}): Combatant {
     structure: track(0),
     heat: 0,
     pilotHits: 0,
+    gunnery: 4,
+    piloting: 5,
+    gator: createGatorState(),
     ac: 0,
     eac: 0,
     kac: 0,
@@ -136,6 +144,8 @@ export function combatantToTemplate(combatant: Combatant): CombatantTemplate {
     resolve: combatant.resolve,
     armor: combatant.armor.max,
     structure: combatant.structure.max,
+    gunnery: combatant.gunnery,
+    piloting: combatant.piloting,
     ac: combatant.ac,
     eac: combatant.eac,
     kac: combatant.kac,
@@ -272,6 +282,8 @@ export function applyTemplateUpdate(
     next.structure.max = update.structure;
     next.structure.current = Math.max(0, Math.min(next.structure.current, update.structure));
   }
+  if (update.gunnery !== undefined) next.gunnery = update.gunnery;
+  if (update.piloting !== undefined) next.piloting = update.piloting;
 
   return next;
 }
@@ -369,6 +381,27 @@ function normSaves(value: unknown): SavingThrows {
   };
 }
 
+function normGator(value: unknown): GatorState {
+  const raw = record(value);
+  const fallback = createGatorState();
+  const attacker = str(raw.attackerMovement) as BtAttackerMovement;
+  const target = str(raw.targetMovement) as BtTargetMovement;
+  const range = str(raw.range) as BtRange;
+  const attackerValues: BtAttackerMovement[] = ['stationary', 'walked', 'ran', 'jumped'];
+  const targetValues: BtTargetMovement[] = ['0-2', '3-4', '5-6', '7-9', '10-17', '18-24', '25+'];
+  const rangeValues: BtRange[] = ['short', 'medium', 'long', 'extreme'];
+  return {
+    attackerMovement: attackerValues.includes(attacker) ? attacker : fallback.attackerMovement,
+    targetMovement: targetValues.includes(target) ? target : fallback.targetMovement,
+    targetJumped: bool(raw.targetJumped),
+    targetImmobile: bool(raw.targetImmobile),
+    range: rangeValues.includes(range) ? range : fallback.range,
+    other: Math.round(num(raw.other, 0)),
+    useHeat: bool(raw.useHeat, true),
+    usePilotHits: bool(raw.usePilotHits, true),
+  };
+}
+
 function normCustomStats(value: unknown): CustomStat[] {
   if (!Array.isArray(value)) return [];
   return value.flatMap((entry) => {
@@ -423,6 +456,8 @@ export function normalizeTemplate(value: unknown): CombatantTemplate | null {
     resolve: Math.max(0, Math.round(num(raw.resolve, 0))),
     armor: Math.max(0, Math.round(num(raw.armor, 0))),
     structure: Math.max(0, Math.round(num(raw.structure, 0))),
+    gunnery: Math.max(0, Math.round(num(raw.gunnery, 4))),
+    piloting: Math.max(0, Math.round(num(raw.piloting, 5))),
     ac: Math.max(0, Math.round(num(raw.ac, 0))),
     eac: Math.max(0, Math.round(num(raw.eac, 0))),
     kac: Math.max(0, Math.round(num(raw.kac, 0))),
@@ -475,6 +510,9 @@ export function normalizeCombatant(value: unknown, remapIds = false): Combatant 
     structure: normTrack(raw.structure, 0),
     heat: Math.max(0, Math.round(num(raw.heat, 0))),
     pilotHits: Math.max(0, Math.min(6, Math.round(num(raw.pilotHits, 0)))),
+    gunnery: Math.max(0, Math.round(num(raw.gunnery, 4))),
+    piloting: Math.max(0, Math.round(num(raw.piloting, 5))),
+    gator: normGator(raw.gator),
     ac: Math.max(0, Math.round(num(raw.ac, 0))),
     eac: Math.max(0, Math.round(num(raw.eac, 0))),
     kac: Math.max(0, Math.round(num(raw.kac, 0))),

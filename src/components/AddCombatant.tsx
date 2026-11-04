@@ -110,6 +110,8 @@ export function AddCombatant() {
   const [resolve, setResolve] = useState('3');
   const [armor, setArmor] = useState('10');
   const [structure, setStructure] = useState('5');
+  const [gunnery, setGunnery] = useState('4');
+  const [piloting, setPiloting] = useState('5');
   const [ac, setAc] = useState('10');
   const [eac, setEac] = useState('10');
   const [kac, setKac] = useState('10');
@@ -157,6 +159,8 @@ export function AddCombatant() {
     if (isBt) {
       setArmor('10');
       setStructure('5');
+      setGunnery('4');
+      setPiloting('5');
       setSide((current) => (current === 'Players' || !current ? 'OpFor' : current));
     }
     setAc('10');
@@ -202,6 +206,8 @@ export function AddCombatant() {
     setResolve(String(template.resolve));
     setArmor(String(template.armor));
     setStructure(String(template.structure));
+    setGunnery(String(template.gunnery));
+    setPiloting(String(template.piloting));
     setAc(String(template.ac));
     setEac(String(template.eac));
     setKac(String(template.kac));
@@ -245,6 +251,8 @@ export function AddCombatant() {
     const resolveValue = Math.max(0, toInt(resolve, 0));
     const armorValue = Math.max(0, toInt(armor, 0));
     const structureValue = Math.max(0, toInt(structure, 0));
+    const gunneryValue = Math.max(0, toInt(gunnery, 4));
+    const pilotingValue = Math.max(0, toInt(piloting, 5));
     const acValue = Math.max(0, toInt(ac, 0));
     const eacValue = Math.max(0, toInt(eac, 0));
     const kacValue = Math.max(0, toInt(kac, 0));
@@ -275,6 +283,8 @@ export function AddCombatant() {
       resolveValue,
       armorValue,
       structureValue,
+      gunneryValue,
+      pilotingValue,
       acValue,
       eacValue,
       kacValue,
@@ -305,6 +315,8 @@ export function AddCombatant() {
     resolve: values.resolveValue,
     armor: values.armorValue,
     structure: values.structureValue,
+    gunnery: values.gunneryValue,
+    piloting: values.pilotingValue,
     ac: values.acValue,
     eac: values.eacValue,
     kac: values.kacValue,
@@ -353,6 +365,8 @@ export function AddCombatant() {
         resolve: system.showResolve ? values.resolveValue : 0,
         armor: track(isBt ? values.armorValue : 0),
         structure: track(isBt ? values.structureValue : 0),
+        gunnery: values.gunneryValue,
+        piloting: values.pilotingValue,
         ac: values.acValue,
         eac: values.eacValue,
         kac: values.kacValue,
@@ -566,6 +580,28 @@ export function AddCombatant() {
                   min={0}
                   value={structure}
                   onChange={(event) => setStructure(event.target.value)}
+                />
+              </div>
+              <div className="field">
+                <label htmlFor="add-gunnery">Gunnery</label>
+                <input
+                  id="add-gunnery"
+                  type="number"
+                  min={0}
+                  value={gunnery}
+                  onChange={(event) => setGunnery(event.target.value)}
+                  title="Base Gunnery skill"
+                />
+              </div>
+              <div className="field">
+                <label htmlFor="add-piloting">Piloting</label>
+                <input
+                  id="add-piloting"
+                  type="number"
+                  min={0}
+                  value={piloting}
+                  onChange={(event) => setPiloting(event.target.value)}
+                  title="Base Piloting skill"
                 />
               </div>
             </>

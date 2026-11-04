@@ -8,6 +8,7 @@ import {
   duplicateCombatant,
   normalizeAppData,
 } from '../src/lib/factory';
+import { createGatorState } from '../src/lib/gator';
 import type { Combatant, CombatantTemplate } from '../src/types';
 
 describe('combatantToTemplate', () => {
@@ -40,6 +41,8 @@ describe('combatantToTemplate', () => {
       resolve: 3,
       armor: 10,
       structure: 5,
+      gunnery: 4,
+      piloting: 5,
       ac: 15,
       eac: 12,
       kac: 14,
@@ -344,6 +347,8 @@ describe('normalizeAppData templates', () => {
         resolve: 3,
         armor: 0,
         structure: 0,
+        gunnery: 4,
+        piloting: 5,
         ac: 12,
         eac: 0,
         kac: 0,
@@ -638,5 +643,86 @@ describe('applyTemplateUpdate', () => {
     const snapshot = structuredClone(base);
     applyTemplateUpdate(base, { hpMax: 99, ac: 99, name: 'Renamed' });
     expect(base).toEqual(snapshot);
+  });
+});
+
+describe('BattleTech Gunnery and GATOR', () => {
+  it('defaults Gunnery, Piloting and GATOR selections on new combatants', () => {
+    const combatant = createCombatant({ name: 'Mech' });
+    expect(combatant.gunnery).toBe(4);
+    expect(combatant.piloting).toBe(5);
+    expect(combatant.gator).toEqual({
+      attackerMovement: 'stationary',
+      targetMovement: '0-2',
+      targetJumped: false,
+      targetImmobile: false,
+      range: 'short',
+      other: 0,
+      useHeat: true,
+      usePilotHits: true,
+    });
+  });
+
+  it('captures Gunnery and Piloting in templates', () => {
+    const combatant = createCombatant({ name: 'Mech', gunnery: 2, piloting: 3 });
+    const template = combatantToTemplate(combatant);
+    expect(template.gunnery).toBe(2);
+    expect(template.piloting).toBe(3);
+  });
+
+  it('syncs Gunnery and Piloting onto matching combatants but keeps GATOR state', () => {
+    const base = createCombatant({
+      name: 'Mech',
+      gunnery: 4,
+      piloting: 5,
+      gator: { ...createGatorState(), attackerMovement: 'jumped', range: 'long' },
+    });
+    const next = applyTemplateUpdate(base, { gunnery: 2, piloting: 3 });
+    expect(next.gunnery).toBe(2);
+    expect(next.piloting).toBe(3);
+    expect(next.gator.attackerMovement).toBe('jumped');
+    expect(next.gator.range).toBe('long');
+  });
+
+  it('normalizes loaded Gunnery, Piloting and GATOR values with safe defaults', () => {
+    const data = normalizeAppData(
+      {
+        encounters: [
+          {
+            name: 'A',
+            system: 'battletech',
+            combatants: [
+              {
+                name: 'Mech',
+                gunnery: -2,
+                piloting: 3.6,
+                gator: {
+                  attackerMovement: 'flying',
+                  targetMovement: '10-17',
+                  range: 'extreme',
+                  other: 2.4,
+                  targetJumped: true,
+                  useHeat: false,
+                },
+              },
+            ],
+          },
+        ],
+      },
+      true,
+    );
+    const mech = data?.encounters[0].combatants[0];
+    expect(mech?.gunnery).toBe(0);
+    expect(mech?.piloting).toBe(4);
+    expect(mech?.gator).toEqual({
+      attackerMovement: 'stationary',
+      targetMovement: '10-17',
+      targetJumped: true,
+      targetImmobile: false,
+      range: 'extreme',
+      other: 2,
+      useHeat: false,
+      usePilotHits: true,
+    });
   });
 });
