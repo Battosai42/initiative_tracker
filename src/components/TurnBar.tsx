@@ -1,5 +1,10 @@
 import { useStore } from '../state/store';
-import { activeSide as battletechActiveSide, roundComplete } from '../lib/battletech';
+import {
+  activeSide as battletechActiveSide,
+  activeSidePhase,
+  BT_PHASE_LABELS,
+  roundComplete,
+} from '../lib/battletech';
 
 export function TurnBar() {
   const {
@@ -15,6 +20,7 @@ export function TurnBar() {
 
   const isBt = system.id === 'battletech';
   const btSide = isBt ? battletechActiveSide(encounter) : null;
+  const btPhase = isBt ? activeSidePhase(encounter) : null;
   const btDone = isBt && roundComplete(encounter);
   const hasCombatants = encounter.combatants.length > 0;
   const canGoBack = !isBt && system.id !== 'shadowrun';
@@ -25,7 +31,7 @@ export function TurnBar() {
         ? 'Roll side initiative'
         : btDone
           ? 'Round complete'
-          : 'Next side'))
+          : 'Next unit'))
     : (activeCombatant?.name ?? (hasCombatants ? 'Not started' : 'No combatants'));
 
   return (
@@ -45,11 +51,21 @@ export function TurnBar() {
           </span>
         ) : null}
         {isBt ? (
-          <span className="muted">
-            {encounter.btOrder.length
-              ? `${encounter.btOrder.length} activations this round`
-              : '2d6 per side · winner activates first'}
-          </span>
+          <>
+            {btPhase ? (
+              <span
+                className={`bt-phase-tag${activeLabel !== 'Round complete' ? ' is-live' : ''}`}
+                title="Current turn phase for the active side"
+              >
+                {BT_PHASE_LABELS[btPhase]}
+              </span>
+            ) : null}
+            <span className="muted">
+              {encounter.btOrder.length
+                ? `${encounter.btOrder.length} activations this round`
+                : '2d6 per side · winner activates first'}
+            </span>
+          </>
         ) : null}
         {system.id === 'shadowrun' ? (
           <span className="muted">Scores drop by 10 each pass</span>

@@ -6,6 +6,7 @@ import {
   type BtLocations,
   type BtRange,
   type BtTargetMovement,
+  type BtTurnPhase,
   type Combatant,
   type CombatantTemplate,
   type ConditionInstance,
@@ -20,6 +21,7 @@ import {
 } from '../types';
 import { SYSTEMS } from '../data/systems';
 import { defaultSaves } from '../data/saves';
+import { normBtPhase } from './battletech';
 import { createGatorState } from './gator';
 import { BT_LOCATION_IDS, btLocationTotals, createBtLocations } from './mech';
 
@@ -76,6 +78,7 @@ export function createCombatant(partial: Partial<Combatant> = {}): Combatant {
       createBtLocations(armor.max, structure.max, armor.current, structure.current),
     heat: 0,
     pilotHits: 0,
+    btPhase: 'movement',
     gunnery: 4,
     piloting: 5,
     gator: createGatorState(),
@@ -589,6 +592,7 @@ export function normalizeCombatant(value: unknown, remapIds = false): Combatant 
     locations: normBtLocations(raw.locations, armor, structure),
     heat: Math.max(0, Math.round(num(raw.heat, 0))),
     pilotHits: Math.max(0, Math.min(6, Math.round(num(raw.pilotHits, 0)))),
+    btPhase: normBtPhase(raw.btPhase),
     gunnery: Math.max(0, Math.round(num(raw.gunnery, 4))),
     piloting: Math.max(0, Math.round(num(raw.piloting, 5))),
     gator: normGator(raw.gator),

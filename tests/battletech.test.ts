@@ -3,7 +3,14 @@ import { createCombatant, createEncounter, normalizeAppData, track } from '../sr
 import {
   activateUnit,
   activeSide,
+  activeSidePhase,
+  advanceBtPhaseUnit,
+  BT_PHASE_LABELS,
+  isBtPhaseComplete,
+  nextBtAction,
+  nextBtPhase,
   nextSide,
+  normBtPhase,
   rollSides,
   roundComplete,
   sideNames,
@@ -92,6 +99,123 @@ describe('Battletech side initiative', () => {
     const { encounter } = btEncounter();
     const rolled = rollSides(encounter, () => 3);
     expect(nextSide(rolled).btIndex).toBe(1);
+  });
+});
+
+describe('Battletech turn phases', () => {
+  it('advances through the five phases and clamps at End', () => {
+    expect(nextBtPhase('movement')).toBe('attack');
+    expect(nextBtPhase('piloting')).toBe('end');
+    expect(nextBtPhase('end')).toBe('end');
+    expect(nextBtPhase('nonsense' as never)).toBe('movement');
+  });
+
+  it('only reports End as complete', () => {
+    expect(isBtPhaseComplete('end')).toBe(true);
+    expect(isBtPhaseComplete('movement')).toBe(false);
+  });
+
+  it('normalizes unknown values to Movement', () => {
+    expect(normBtPhase(undefined)).toBe('movement');
+    expect(normBtPhase('bogus')).toBe('movement');
+    expect(normBtPhase('heat')).toBe('heat');
+  });
+
+  it('labels each phase', () => {
+    expect(BT_PHASE_LABELS).toEqual({
+      movement: 'Movement',
+      attack: 'Attack',
+      heat: 'Heat',
+      piloting: 'Piloting',
+      end: 'End',
+    });
+  });
+
+  it('advances a unit one phase and leaves finished units untouched', () => {
+    const { encounter, a1 } = btEncounter();
+    const rolled = rollSides(encounter, () => 3);
+    const moved = advanceBtPhaseUnit(rolled, a1.id);
+    expect(moved.combatants.find((c) => c.id === a1.id)?.btPhase).toBe('attack');
+    const endState = {
+      ...moved,
+      combatants: moved.combatants.map((c) =>
+        c.id === a1.id ? { ...c, btPhase: 'end' as const } : c,
+      ),
+    };
+    expect(advanceBtPhaseUnit(endState, a1.id).combatants.find((c) => c.id === a1.id)?.btPhase).toBe(
+      'end',
+    );
+  });
+
+  it('walks a unit through all phases, then moves on only at End', () => {
+    const { encounter, a1 } = btEncounter();
+    const rolled = rollSides(encounter, () => 3);
+    // First click: Movement -> Attack, unit still in the turn.
+    const a = nextBtAction(rolled, a1.id);
+    expect(a.combatants.find((c) => c.id === a1.id)?.btPhase).toBe('attack');
+    expect(a.combatants.find((c) => c.id === a1.id)?.acted).toBe(false);
+    // Continue to Heat, Piloting, End.
+    const b = nextBtAction(a, a1.id);
+    const c = nextBtAction(b, a1.id);
+    const d = nextBtAction(c, a1.id);
+    expect(d.combatants.find((e) => e.id === a1.id)?.btPhase).toBe('end');
+    expect(d.combatants.find((e) => e.id === a1.id)?.acted).toBe(false);
+    // The next click finishes the unit and advances the roster.
+    const e = nextBtAction(d, a1.id);
+    expect(e.combatants.find((entry) => entry.id === a1.id)?.acted).toBe(true);
+  });
+
+  it('resets every unit to Movement when a fresh round starts', () => {
+    const { encounter } = btEncounter();
+    let current = rollSides(encounter, () => 3);
+    current = advanceBtPhaseUnit(current, encounter.combatants[0].id);
+    current = advanceBtPhaseUnit(current, encounter.combatants[0].id);
+    expect(
+      current.combatants.find((c) => c.id === encounter.combatants[0].id)?.btPhase,
+    ).toBe('heat');
+    for (let i = 0; i < 5; i += 1) {
+      const active = activeSide(current);
+      const unit = current.combatants.find(
+        (entry) => entry.side === active && !entry.acted && !entry.defeated,
+      );
+      current = activateUnit(current, unit!.id, () => 3);
+    }
+    expect(current.round).toBe(2);
+    expect(current.combatants.every((c) => c.btPhase === 'movement')).toBe(true);
+  });
+
+  it('reports the earliest unfinished phase for the active side', () => {
+    const { encounter, a1 } = btEncounter();
+    const rolled = rollSides(encounter, () => 3);
+    expect(activeSidePhase(rolled)).toBe('movement');
+    const advanced = advanceBtPhaseUnit(rolled, a1.id);
+    expect(advanced.combatants.find((c) => c.id === a1.id)?.btPhase).toBe('attack');
+    // Alpha 2 has not acted, so the side is still collectively in Movement.
+    expect(activeSidePhase(advanced)).toBe('movement');
+  });
+
+  it('reports End when every unit in the active side has finished', () => {
+    const { encounter } = btEncounter();
+    const rolled = rollSides(encounter, () => 3);
+    const allAlphaEnd = {
+      ...rolled,
+      combatants: rolled.combatants.map((c) =>
+        c.side === 'Alpha' ? { ...c, btPhase: 'end' as const } : c,
+      ),
+    };
+    expect(activeSidePhase(allAlphaEnd)).toBe('end');
+  });
+
+  it('returns null when the active side has no unacted units', () => {
+    const { encounter } = btEncounter();
+    const rolled = rollSides(encounter, () => 3);
+    const alphaActed = {
+      ...rolled,
+      combatants: rolled.combatants.map((c) =>
+        c.side === 'Alpha' ? { ...c, acted: true } : c,
+      ),
+    };
+    expect(activeSidePhase(alphaActed)).toBeNull();
   });
 });
 

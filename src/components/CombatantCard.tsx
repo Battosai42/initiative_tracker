@@ -2,7 +2,13 @@ import { useEffect, useState } from 'react';
 import type { BtLocationId, Combatant, CustomStat } from '../types';
 import { useStore } from '../state/store';
 import { healthState } from '../lib/hp';
-import { activeSide as battletechActiveSide } from '../lib/battletech';
+import {
+  activeSide as battletechActiveSide,
+  activeSidePhase,
+  isBtPhaseComplete,
+  nextBtPhase,
+  BT_PHASE_LABELS,
+} from '../lib/battletech';
 import {
   BT_HEAT_SHUTDOWN,
   BT_LOCATION_IDS,
@@ -262,7 +268,7 @@ export function CombatantCard({ combatant }: { combatant: Combatant }) {
     setSide,
     setHeat,
     setPilotHits,
-    activateBtUnit,
+    nextBtAction,
   } = useStore();
 
   const [expanded, setExpanded] = useState(false);
@@ -280,6 +286,8 @@ export function CombatantCard({ combatant }: { combatant: Combatant }) {
   const isActive = activeCombatant?.id === combatant.id;
   const btSide = isBt ? battletechActiveSide(encounter) : null;
   const onActiveSide = isBt && btSide !== null && btSide === (combatant.side.trim() || 'Unassigned');
+  const isCurrentPhase =
+    isBt && onActiveSide && activeSidePhase(encounter) === combatant.btPhase;
   const canActivate = onActiveSide && !combatant.defeated && !combatant.acted;
   const secondaryLabel = system.secondaryLabel;
   const showSecondary =
@@ -520,11 +528,29 @@ export function CombatantCard({ combatant }: { combatant: Combatant }) {
             <button
               type="button"
               className="btn small primary"
-              onClick={() => activateBtUnit(combatant.id)}
-              title="Activate this unit and pass to the next side"
+              onClick={() => nextBtAction(combatant.id)}
+              title={
+                isBtPhaseComplete(combatant.btPhase)
+                  ? 'Finish this unit\'s turn and move to the next'
+                  : `Advance to ${BT_PHASE_LABELS[nextBtPhase(combatant.btPhase)]}`
+              }
             >
-              Activate
+              Next →
             </button>
+          ) : null}
+          {isBt ? (
+            <div className="bt-phase-group">
+              <span
+                className={`bt-phase-pill ${isCurrentPhase ? 'is-current' : ''}`}
+                title={
+                  isCurrentPhase
+                    ? 'Current phase for the active side'
+                    : 'This unit\'s turn phase'
+                }
+              >
+                {BT_PHASE_LABELS[combatant.btPhase]}
+              </span>
+            </div>
           ) : null}
           {!isBt && !isActive && !combatant.defeated ? (
             <button

@@ -50,7 +50,9 @@ import {
   setBtLocationMax,
 } from '../lib/mech';
 import {
+  advanceBtPhaseUnit,
   activateUnit,
+  nextBtAction,
   nextSide,
   rollSides,
   sideNames,
@@ -218,6 +220,7 @@ export function reducer(state: State, action: Action): State {
         combatants: current.combatants.map((combatant) => ({
           ...combatant,
           acted: false,
+          btPhase: 'movement',
         })),
         updatedAt: Date.now(),
       };
@@ -379,6 +382,8 @@ interface StoreApi {
   rollBtSides: () => void;
   nextBtSide: () => void;
   activateBtUnit: (id: string) => void;
+  advanceBtPhase: (id: string) => void;
+  nextBtAction: (id: string) => void;
   selectEncounter: (id: string) => void;
   createEncounter: (system: SystemId) => void;
   duplicateEncounterById: (id: string) => void;
@@ -780,6 +785,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       nextBtSide: () => dispatch({ type: 'mutate', fn: (enc) => nextSide(enc) }),
       activateBtUnit: (id) =>
         dispatch({ type: 'mutate', fn: (enc) => activateUnit(enc, id) }),
+      advanceBtPhase: (id) =>
+        dispatch({ type: 'mutate', fn: (enc) => advanceBtPhaseUnit(enc, id) }),
+      nextBtAction: (id) =>
+        dispatch({ type: 'mutate', fn: (enc) => nextBtAction(enc, id) }),
       selectEncounter: (id) => dispatch({ type: 'select', id }),
       createEncounter: (systemId) => dispatch({ type: 'create', system: systemId }),
       duplicateEncounterById: (id) => dispatch({ type: 'duplicateEncounter', id }),

@@ -45,6 +45,12 @@ export type BtTargetMovement = '0-2' | '3-4' | '5-6' | '7-9' | '10-17' | '18-24'
 /** BattleTech range brackets and their to-hit modifiers. */
 export type BtRange = 'short' | 'medium' | 'long' | 'extreme';
 
+/**
+ * BattleTech: the five phases of a 'Mech's turn, in order. Each unit works
+ * through them (Movement → Attack → Heat → Piloting → End) during its activation.
+ */
+export type BtTurnPhase = 'movement' | 'attack' | 'heat' | 'piloting' | 'end';
+
 /** The standard BattleTech 'Mech hit locations. */
 export type BtLocationId =
   | 'head'
@@ -170,6 +176,8 @@ export interface Combatant {
   locations: BtLocations;
   heat: number;
   pilotHits: number;
+  /** BattleTech: current phase of this unit's own turn. */
+  btPhase: BtTurnPhase;
   /** Battletech: base Gunnery and Piloting skills. */
   gunnery: number;
   piloting: number;

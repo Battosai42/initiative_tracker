@@ -1,6 +1,8 @@
 import { useStore } from '../state/store';
 import {
   activeSide,
+  activeSidePhase,
+  BT_PHASE_LABELS,
   nextSide,
   rollSides,
   roundComplete,
@@ -16,8 +18,12 @@ export function BattletechPanel() {
   const sides = sideNames(encounter);
   if (sides.length === 0) return null;
   const active = activeSide(encounter);
+  const btPhase = activeSidePhase(encounter);
   const done = roundComplete(encounter);
   const started = encounter.btOrder.length > 0;
+  const hasUnactedLive = encounter.combatants.some(
+    (combatant) => !combatant.defeated && !combatant.acted,
+  );
 
   const roll = () => {
     mutate((current) => rollSides(current));
@@ -37,10 +43,10 @@ export function BattletechPanel() {
           <button type="button" className="btn" onClick={roll}>
             Roll sides
           </button>
-          {started ? (
+          {started && !active && !done && hasUnactedLive ? (
             <button
               type="button"
-              className="btn primary"
+              className="btn"
               onClick={() => mutate((current) => nextSide(current))}
             >
               Next side →
@@ -76,6 +82,11 @@ export function BattletechPanel() {
       {started ? (
         <p className="bt-order">
           <span className="mini-label">Activation order</span>
+          {btPhase ? (
+            <span className="bt-phase-chip" title="Current turn phase for the active side">
+              {BT_PHASE_LABELS[btPhase]}
+            </span>
+          ) : null}
           {encounter.btOrder.map((side, index) => (
             <span key={`${side}-${index}`} className="bt-order-item">
               {index > 0 ? <span className="bt-arrow">›</span> : null}
@@ -87,7 +98,9 @@ export function BattletechPanel() {
         <p className="muted">Roll sides to create the activation order.</p>
       )}
 
-      {done ? <p className="muted">Round complete. “Next side” rolls a fresh round.</p> : null}
+      {done ? (
+        <p className="muted">Round complete — the next activation starts a fresh round.</p>
+      ) : null}
     </section>
   );
 }

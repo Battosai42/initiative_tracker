@@ -1,4 +1,4 @@
-import type { Combatant, Encounter } from '../types';
+import type { BtTurnPhase, Combatant, Encounter } from '../types';
 import { rollInitiativeScore, type Rng } from './dice';
 import { tickConditions } from './initiative';
 
@@ -65,7 +65,11 @@ export function rollSides(encounter: Encounter, rng?: Rng): Encounter {
     sideRolls,
     btOrder: buildOrder(sides, counts, sideRolls),
     btIndex: 0,
-    combatants: encounter.combatants.map((combatant) => ({ ...combatant, acted: false })),
+    combatants: encounter.combatants.map((combatant) => ({
+      ...combatant,
+      acted: false,
+      btPhase: 'movement',
+    })),
     updatedAt: Date.now(),
   };
 }
@@ -146,4 +150,111 @@ export function roundComplete(encounter: Encounter): boolean {
     encounter.system === 'battletech' &&
     encounter.combatants.every((combatant) => combatant.defeated || combatant.acted)
   );
+}
+
+/** The five BattleTech turn phases, in order. */
+export const BT_PHASES: readonly BtTurnPhase[] = [
+  'movement',
+  'attack',
+  'heat',
+  'piloting',
+  'end',
+];
+
+/** Human-readable labels for each phase. */
+export const BT_PHASE_LABELS: Readonly<Record<BtTurnPhase, string>> = {
+  movement: 'Movement',
+  attack: 'Attack',
+  heat: 'Heat',
+  piloting: 'Piloting',
+  end: 'End',
+};
+
+/** The phase that follows `phase`, clamped at `end`. */
+export function nextBtPhase(phase: BtTurnPhase): BtTurnPhase {
+  const index = BT_PHASES.indexOf(phase);
+  return BT_PHASES[Math.min(BT_PHASES.length - 1, index < 0 ? 0 : index + 1)];
+}
+
+/** A unit has finished its turn once it reaches the End phase. */
+export function isBtPhaseComplete(phase: BtTurnPhase): boolean {
+  return phase === 'end';
+}
+
+/** Normalize an arbitrary value into a valid phase, defaulting to Movement. */
+export function normBtPhase(
+  value: unknown,
+  fallback: BtTurnPhase = 'movement',
+): BtTurnPhase {
+  return (BT_PHASES as readonly string[]).includes(value as string)
+    ? (value as BtTurnPhase)
+    : fallback;
+}
+
+/**
+ * The single "Next" action for a unit's turn: advance one phase forward. Once a
+ * unit reaches the End phase, it is marked done and the turn moves on to the
+ * next unit. This is what the card's "Next →" button drives, so a unit walks
+ * through all five phases across successive clicks and only advances the roster
+ * when its own turn is complete.
+ */
+export function nextBtAction(
+  encounter: Encounter,
+  combatantId: string,
+  rng?: Rng,
+): Encounter {
+  if (encounter.system !== 'battletech') return encounter;
+  const target = encounter.combatants.find(
+    (combatant) => combatant.id === combatantId,
+  );
+  if (!target) return encounter;
+  if (isBtPhaseComplete(target.btPhase)) return activateUnit(encounter, combatantId, rng);
+  return advanceBtPhaseUnit(encounter, combatantId);
+}
+
+/**
+ * Advance a single unit one phase forward. Units that have already reached the
+ * End phase are left untouched.
+ */
+export function advanceBtPhaseUnit(
+  encounter: Encounter,
+  combatantId: string,
+): Encounter {
+  if (encounter.system !== 'battletech') return encounter;
+  const target = encounter.combatants.find(
+    (combatant) => combatant.id === combatantId,
+  );
+  if (!target || isBtPhaseComplete(target.btPhase)) return encounter;
+  return {
+    ...encounter,
+    combatants: encounter.combatants.map((combatant) =>
+      combatant.id === combatantId
+        ? { ...combatant, btPhase: nextBtPhase(combatant.btPhase) }
+        : combatant,
+    ),
+    updatedAt: Date.now(),
+  };
+}
+
+/**
+ * The phase the active side is collectively in: the earliest (lowest) phase
+ * among its units that have not yet finished. This mirrors BattleTech, where a
+ * side cannot move on until every 'Mech has completed that phase, even though
+ * individual units may be advanced further.
+ */
+export function activeSidePhase(encounter: Encounter): BtTurnPhase | null {
+  if (encounter.system !== 'battletech') return null;
+  const side = activeSide(encounter);
+  if (!side) return null;
+  const units = unitsForSide(encounter, side);
+  if (units.length === 0) return null;
+  const incomplete = units
+    .map((combatant) => combatant.btPhase)
+    .filter((phase) => phase !== 'end');
+  if (incomplete.length === 0) return 'end';
+  const earliestIndex = incomplete.reduce(
+    (min, phase) => Math.min(min, BT_PHASES.indexOf(phase)),
+    BT_PHASES.length,
+  );
+  return BT_PHASES[earliestIndex];
 }
