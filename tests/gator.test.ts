@@ -4,6 +4,8 @@ import {
   createGatorState,
   gatorBreakdown,
   heatModifier,
+  pilotingBreakdown,
+  pilotingDamageModifier,
   rangeModifier,
   signed,
   targetMovementModifier,
@@ -26,6 +28,7 @@ describe('createGatorState', () => {
       other: 0,
       useHeat: true,
       usePilotHits: true,
+      usePilotingDamage: true,
     });
   });
 });
@@ -149,6 +152,55 @@ describe('gatorBreakdown', () => {
     });
     expect(breakdown.target).toBe(-4);
     expect(breakdown.total).toBe(0);
+  });
+});
+
+describe('pilotingDamageModifier', () => {
+  it('adds one per 20 points of damage, capped at +4', () => {
+    expect(pilotingDamageModifier(0)).toBe(0);
+    expect(pilotingDamageModifier(19)).toBe(0);
+    expect(pilotingDamageModifier(20)).toBe(1);
+    expect(pilotingDamageModifier(39)).toBe(1);
+    expect(pilotingDamageModifier(40)).toBe(2);
+    expect(pilotingDamageModifier(79)).toBe(3);
+    expect(pilotingDamageModifier(80)).toBe(4);
+    expect(pilotingDamageModifier(120)).toBe(4);
+  });
+
+  it('never goes negative', () => {
+    expect(pilotingDamageModifier(-10)).toBe(0);
+  });
+});
+
+describe('pilotingBreakdown', () => {
+  it('adds piloting skill, damage and manual other modifiers', () => {
+    expect(
+      pilotingBreakdown({ piloting: 4, gator: gator({ other: 1 }) }, 2),
+    ).toEqual({ piloting: 4, damage: 2, other: 1, total: 7 });
+  });
+
+  it('includes the damage modifier by default', () => {
+    const result = pilotingBreakdown({ piloting: 3, gator: gator() }, 1);
+    expect(result.damage).toBe(1);
+    expect(result.total).toBe(4);
+  });
+
+  it('drops the damage modifier when the toggle is off', () => {
+    const result = pilotingBreakdown(
+      { piloting: 3, gator: gator({ usePilotingDamage: false }) },
+      3,
+    );
+    expect(result.damage).toBe(0);
+    expect(result.total).toBe(3);
+  });
+
+  it('ignores other when rounding is involved', () => {
+    const result = pilotingBreakdown(
+      { piloting: 2, gator: gator({ other: 1.4 }) },
+      0,
+    );
+    expect(result.other).toBe(1);
+    expect(result.total).toBe(3);
   });
 });
 

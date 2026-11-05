@@ -46,6 +46,7 @@ export function createGatorState(): GatorState {
     other: 0,
     useHeat: true,
     usePilotHits: true,
+    usePilotingDamage: true,
   };
 }
 
@@ -107,6 +108,42 @@ export function gatorBreakdown(
     heat,
     pilotHits,
     total: combatant.gunnery + attacker + target + other + range,
+  };
+}
+
+/**
+ * Damage modifier for a Piloting Skill Roll: +1 for every 20 points of damage
+ * a 'Mech has taken (20-39: +1, 40-59: +2, 60-79: +3, 80+: +4). Based on the
+ * total armor + structure damage across all hit locations.
+ */
+export function pilotingDamageModifier(totalDamage: number): number {
+  return Math.min(4, Math.max(0, Math.floor(totalDamage / 20)));
+}
+
+export interface PilotingBreakdown {
+  piloting: number;
+  damage: number;
+  other: number;
+  total: number;
+}
+
+/**
+ * Target number for a Piloting Skill Roll: base Piloting skill plus the damage
+ * modifier (per the PSR table) and the manual "Other" modifiers (terrain,
+ * destroyed actuators and similar). Heat and pilot-hit modifiers only apply to
+ * weapon attacks, so they are not included here.
+ */
+export function pilotingBreakdown(
+  combatant: Pick<Combatant, 'piloting' | 'gator'>,
+  damageModifier: number,
+): PilotingBreakdown {
+  const other = Math.round(combatant.gator.other);
+  const damage = combatant.gator.usePilotingDamage ? damageModifier : 0;
+  return {
+    piloting: combatant.piloting,
+    damage,
+    other,
+    total: combatant.piloting + damage + other,
   };
 }
 

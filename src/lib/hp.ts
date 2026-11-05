@@ -1,4 +1,5 @@
-import type { Combatant, SystemId, Track } from '../types';
+import type { BtLocations, Combatant, SystemId, Track } from '../types';
+import { BT_LOCATION_IDS, btLocationTotals, damageBtLocation } from './mech';
 
 function clampAmount(amount: number): number {
   if (!Number.isFinite(amount)) return 0;
@@ -44,29 +45,25 @@ export function setTrackCurrent(track: Track, current: number): Track {
   };
 }
 
+/**
+ * Damage without a named hit location is treated as a center-torso hit. The
+ * location controls on a BattleTech card call `damageBtLocation` directly.
+ */
 function damageBattletech(combatant: Combatant, amount: number): Combatant {
-  let remaining = clampAmount(amount);
-  const armorAbsorbed = Math.min(combatant.armor.current, remaining);
-  remaining -= armorAbsorbed;
-  const armor = { ...combatant.armor, current: combatant.armor.current - armorAbsorbed };
-  const structure = {
-    ...combatant.structure,
-    current: Math.max(0, combatant.structure.current - remaining),
-  };
-  const destroyed = combatant.structure.max > 0 && structure.current <= 0;
-  return {
-    ...combatant,
-    armor,
-    structure,
-    defeated: destroyed ? true : combatant.defeated,
-    conditions:
-      destroyed && !combatant.conditions.some((condition) => condition.label === 'Destroyed')
-        ? [
-            ...combatant.conditions,
-            { id: `cond_${Date.now()}_destroyed`, label: 'Destroyed', rounds: null },
-          ]
-        : combatant.conditions,
-  };
+  return damageBtLocation(combatant, 'centerTorso', amount);
+}
+
+function restoreBtLocations(locations: BtLocations): BtLocations {
+  const next = {} as BtLocations;
+  for (const id of BT_LOCATION_IDS) {
+    const location = locations[id];
+    next[id] = {
+      armor: { ...location.armor, current: location.armor.max, temp: 0 },
+      structure: { ...location.structure, current: location.structure.max, temp: 0 },
+      destroyed: false,
+    };
+  }
+  return next;
 }
 
 /**
@@ -128,12 +125,24 @@ export function applyRegeneration(combatant: Combatant): Combatant {
 
 /** Restores every pool, clears temporary HP, conditions and defeat. */
 export function restoreCombatant(combatant: Combatant): Combatant {
+  const locations = restoreBtLocations(combatant.locations);
+  const hasLocations = Object.values(combatant.locations).some(
+    (location) => location.armor.max > 0 || location.structure.max > 0,
+  );
+  const totals = btLocationTotals(locations);
+  const armor = hasLocations
+    ? { ...totals.armor, temp: 0 }
+    : { ...combatant.armor, current: combatant.armor.max, temp: 0 };
+  const structure = hasLocations
+    ? { ...totals.structure, temp: 0 }
+    : { ...combatant.structure, current: combatant.structure.max, temp: 0 };
   return {
     ...combatant,
     hp: { ...combatant.hp, current: combatant.hp.max, temp: 0 },
     secondary: { ...combatant.secondary, current: combatant.secondary.max, temp: 0 },
-    armor: { ...combatant.armor, current: combatant.armor.max, temp: 0 },
-    structure: { ...combatant.structure, current: combatant.structure.max, temp: 0 },
+    armor,
+    structure,
+    locations,
     conditions: [],
     defeated: false,
     acted: false,

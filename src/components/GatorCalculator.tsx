@@ -1,11 +1,14 @@
 import type { Combatant, GatorState } from '../types';
 import { useStore } from '../state/store';
 import { CommitNumberInput } from './CommitNumberInput';
+import { btLocationTotals } from '../lib/mech';
 import {
   ATTACKER_MOVEMENT_OPTIONS,
   RANGE_OPTIONS,
   TARGET_MOVEMENT_OPTIONS,
   gatorBreakdown,
+  pilotingBreakdown,
+  pilotingDamageModifier,
   signed,
   twoDiceOdds,
 } from '../lib/gator';
@@ -20,6 +23,13 @@ export function GatorCalculator({ combatant }: { combatant: Combatant }) {
   const gator = combatant.gator;
   const breakdown = gatorBreakdown(combatant);
   const odds = twoDiceOdds(breakdown.total);
+  const totals = btLocationTotals(combatant.locations);
+  const totalDamage =
+    (totals.armor.max - totals.armor.current) +
+    (totals.structure.max - totals.structure.current);
+  const damageModifier = pilotingDamageModifier(totalDamage);
+  const piloting = pilotingBreakdown(combatant, damageModifier);
+  const pilotingOdds = twoDiceOdds(piloting.total);
 
   const setGator = (update: Partial<GatorState>) => {
     updateCombatant(combatant.id, (current) => ({
@@ -32,34 +42,42 @@ export function GatorCalculator({ combatant }: { combatant: Combatant }) {
     <div className="expanded-section gator-section">
       <div className="section-head">
         <h4>GATOR</h4>
-        <span className="gator-result">
-          Attack DC <strong>{breakdown.total}</strong>
-          <span className="muted"> · {odds}% on 2d6</span>
+        <span className="gator-results">
+          <span className="gator-result">
+            Attack DC <strong>{breakdown.total}</strong>
+            <span className="muted"> · {odds}% on 2d6</span>
+          </span>
+          <span className="gator-result gator-piloting-result">
+            Piloting DC <strong>{piloting.total}</strong>
+            <span className="muted"> · {pilotingOdds}% on 2d6</span>
+          </span>
         </span>
       </div>
 
       <div className="gator-grid">
         <div className="gator-row">
           <span className="gator-key">G</span>
-          <span className="gator-label">Gunnery / Piloting</span>
+          <span className="gator-label">Base skills</span>
           <div className="gator-options">
             <label className="gator-number">
-              <span>Gunnery</span>
+              <span>Gunnery (attack)</span>
               <CommitNumberInput
                 min={0}
                 max={12}
                 value={combatant.gunnery}
                 label="Gunnery skill"
+                immediate
                 onCommit={(gunnery) => updateCombatant(combatant.id, { gunnery })}
               />
             </label>
             <label className="gator-number">
-              <span>Piloting</span>
+              <span>Piloting (check)</span>
               <CommitNumberInput
                 min={0}
                 max={12}
                 value={combatant.piloting}
                 label="Piloting skill"
+                immediate
                 onCommit={(piloting) => updateCombatant(combatant.id, { piloting })}
               />
             </label>
@@ -211,6 +229,27 @@ export function GatorCalculator({ combatant }: { combatant: Combatant }) {
             })}
           </div>
         </div>
+
+        <div className="gator-row">
+          <span className="gator-key">P</span>
+          <span className="gator-label">Piloting check</span>
+          <div className="gator-options">
+            <label
+              className="gator-checkbox"
+              title="Add +1 per 20 points of damage taken (20-39: +1, 40-59: +2, 60-79: +3, 80+: +4)"
+            >
+              <input
+                type="checkbox"
+                checked={gator.usePilotingDamage}
+                onChange={(event) => setGator({ usePilotingDamage: event.target.checked })}
+              />
+              Damage
+              <span className={`gator-mod ${piloting.damage > 0 ? 'warn' : ''}`}>
+                {signed(piloting.damage)}
+              </span>
+            </label>
+          </div>
+        </div>
       </div>
 
       <div className="gator-breakdown" aria-label="GATOR breakdown">
@@ -220,6 +259,14 @@ export function GatorCalculator({ combatant }: { combatant: Combatant }) {
         <span>O {signed(breakdown.other)}</span>
         <span>R {signed(breakdown.range)}</span>
         <strong>= {breakdown.total}</strong>
+      </div>
+
+      <div className="gator-breakdown gator-piloting-breakdown" aria-label="Piloting check breakdown">
+        <span className="gator-breakdown-label">Piloting</span>
+        <span>P {piloting.piloting}</span>
+        <span>D {signed(piloting.damage)}</span>
+        <span>O {signed(piloting.other)}</span>
+        <strong>= {piloting.total}</strong>
       </div>
     </div>
   );

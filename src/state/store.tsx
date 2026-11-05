@@ -12,6 +12,7 @@ import {
 import type {
   AppData,
   AppSettings,
+  BtLocationId,
   Combatant,
   CombatantTemplate,
   ConditionInstance,
@@ -42,6 +43,12 @@ import {
   sortForDisplay,
 } from '../lib/initiative';
 import { damageCombatant, healCombatant, restoreCombatant } from '../lib/hp';
+import {
+  damageBtLocation,
+  healBtLocation,
+  setBtLocationCurrent,
+  setBtLocationMax,
+} from '../lib/mech';
 import {
   activateUnit,
   nextSide,
@@ -338,6 +345,20 @@ interface StoreApi {
   previous: () => void;
   damage: (id: string, amount: number) => void;
   heal: (id: string, amount: number) => void;
+  damageLocation: (id: string, locationId: BtLocationId, amount: number) => void;
+  healLocation: (id: string, locationId: BtLocationId, amount: number) => void;
+  setLocationMax: (
+    id: string,
+    locationIds: BtLocationId | BtLocationId[],
+    pool: 'armor' | 'structure',
+    max: number,
+  ) => void;
+  setLocationCurrent: (
+    id: string,
+    locationId: BtLocationId,
+    pool: 'armor' | 'structure',
+    current: number,
+  ) => void;
   adjustPool: (
     id: string,
     pool: 'hp' | 'secondary' | 'armor' | 'structure',
@@ -487,6 +508,47 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const heal = useCallback(
     (id: string, amount: number) => {
       updateCombatant(id, (combatant) => healCombatant(combatant, amount));
+    },
+    [updateCombatant],
+  );
+
+  const damageLocation = useCallback(
+    (id: string, locationId: BtLocationId, amount: number) => {
+      updateCombatant(id, (combatant) => damageBtLocation(combatant, locationId, amount));
+    },
+    [updateCombatant],
+  );
+
+  const healLocation = useCallback(
+    (id: string, locationId: BtLocationId, amount: number) => {
+      updateCombatant(id, (combatant) => healBtLocation(combatant, locationId, amount));
+    },
+    [updateCombatant],
+  );
+
+  const setLocationMax = useCallback(
+    (
+      id: string,
+      locationIds: BtLocationId | BtLocationId[],
+      pool: 'armor' | 'structure',
+      max: number,
+    ) => {
+      const ids = Array.isArray(locationIds) ? locationIds : [locationIds];
+      updateCombatant(id, (combatant) =>
+        ids.reduce(
+          (next, locationId) => setBtLocationMax(next, locationId, pool, max),
+          combatant,
+        ),
+      );
+    },
+    [updateCombatant],
+  );
+
+  const setLocationCurrent = useCallback(
+    (id: string, locationId: BtLocationId, pool: 'armor' | 'structure', current: number) => {
+      updateCombatant(id, (combatant) =>
+        setBtLocationCurrent(combatant, locationId, pool, current),
+      );
     },
     [updateCombatant],
   );
@@ -701,6 +763,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       previous,
       damage,
       heal,
+      damageLocation,
+      healLocation,
+      setLocationMax,
+      setLocationCurrent,
       adjustPool,
       setPool,
       setTempHp,
@@ -775,6 +841,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       previous,
       damage,
       heal,
+      damageLocation,
+      healLocation,
+      setLocationMax,
+      setLocationCurrent,
       adjustPool,
       setPool,
       setTempHp,

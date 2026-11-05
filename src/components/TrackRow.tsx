@@ -14,13 +14,22 @@ interface TrackRowProps {
 interface DeltaInputProps {
   label: string;
   onApply: (delta: number) => void;
+  /** Wording used in the tooltip for positive values (default "heal"). */
+  increaseHint?: string;
+  /** Wording used in the tooltip for negative values (default "damage"). */
+  decreaseHint?: string;
 }
 
 /**
  * A single compact field for adjusting a track. Type a positive number to
  * heal, a negative number to damage, then press Enter (or blur) to apply.
  */
-function DeltaInput({ label, onApply }: DeltaInputProps) {
+export function DeltaInput({
+  label,
+  onApply,
+  increaseHint = 'heal',
+  decreaseHint = 'damage',
+}: DeltaInputProps) {
   const [draft, setDraft] = useState('');
   const cancelled = useRef(false);
 
@@ -55,8 +64,8 @@ function DeltaInput({ label, onApply }: DeltaInputProps) {
           event.currentTarget.blur();
         }
       }}
-      aria-label={`${label}: enter a positive number to heal or a negative number to damage, then press Enter`}
-      title={`${label}: type +N to heal or -N to damage, then press Enter`}
+      aria-label={`${label}: enter a positive number to ${increaseHint} or a negative number to ${decreaseHint}, then press Enter`}
+      title={`${label}: type +N to ${increaseHint} or -N to ${decreaseHint}, then press Enter`}
     />
   );
 }

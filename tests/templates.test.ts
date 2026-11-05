@@ -660,6 +660,7 @@ describe('BattleTech Gunnery and GATOR', () => {
       other: 0,
       useHeat: true,
       usePilotHits: true,
+      usePilotingDamage: true,
     });
   });
 
@@ -723,6 +724,7 @@ describe('BattleTech Gunnery and GATOR', () => {
       other: 2,
       useHeat: false,
       usePilotHits: true,
+      usePilotingDamage: true,
     });
   });
 });

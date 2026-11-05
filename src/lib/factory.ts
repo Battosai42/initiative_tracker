@@ -2,6 +2,8 @@ import {
   DATA_VERSION,
   type AppData,
   type BtAttackerMovement,
+  type BtLocationId,
+  type BtLocations,
   type BtRange,
   type BtTargetMovement,
   type Combatant,
@@ -19,6 +21,7 @@ import {
 import { SYSTEMS } from '../data/systems';
 import { defaultSaves } from '../data/saves';
 import { createGatorState } from './gator';
+import { BT_LOCATION_IDS, btLocationTotals, createBtLocations } from './mech';
 
 let counter = 0;
 
@@ -47,6 +50,8 @@ export function defaultDisposition(role: Role): Disposition {
 
 export function createCombatant(partial: Partial<Combatant> = {}): Combatant {
   const role = partial.role ?? 'npc';
+  const armor = partial.armor ?? track(0);
+  const structure = partial.structure ?? track(0);
   return {
     id: uid('c'),
     name: 'Combatant',
@@ -64,8 +69,11 @@ export function createCombatant(partial: Partial<Combatant> = {}): Combatant {
     defeated: false,
     acted: false,
     deathSaves: { successes: 0, failures: 0 },
-    armor: track(0),
-    structure: track(0),
+    armor,
+    structure,
+    locations:
+      partial.locations ??
+      createBtLocations(armor.max, structure.max, armor.current, structure.current),
     heat: 0,
     pilotHits: 0,
     gunnery: 4,
@@ -274,13 +282,27 @@ export function applyTemplateUpdate(
     next.secondary.max = update.secondaryMax;
     next.secondary.current = Math.max(0, Math.min(next.secondary.current, update.secondaryMax));
   }
-  if (update.armor !== undefined) {
-    next.armor.max = update.armor;
-    next.armor.current = Math.max(0, Math.min(next.armor.current, update.armor));
-  }
-  if (update.structure !== undefined) {
-    next.structure.max = update.structure;
-    next.structure.current = Math.max(0, Math.min(next.structure.current, update.structure));
+  if (update.armor !== undefined || update.structure !== undefined) {
+    const armorMax = Math.max(0, Math.round(update.armor ?? next.armor.max));
+    const structureMax = Math.max(0, Math.round(update.structure ?? next.structure.max));
+    const fresh = createBtLocations(armorMax, structureMax);
+    for (const id of BT_LOCATION_IDS) {
+      const previous = next.locations[id];
+      fresh[id].armor.current = Math.min(
+        fresh[id].armor.max,
+        previous?.armor.current ?? fresh[id].armor.max,
+      );
+      fresh[id].structure.current = Math.min(
+        fresh[id].structure.max,
+        previous?.structure.current ?? fresh[id].structure.max,
+      );
+      if (fresh[id].structure.max > 0 && fresh[id].structure.current <= 0) {
+        fresh[id].destroyed = previous?.destroyed ?? false;
+      }
+    }
+    next.locations = fresh;
+    next.armor = btLocationTotals(fresh).armor;
+    next.structure = btLocationTotals(fresh).structure;
   }
   if (update.gunnery !== undefined) next.gunnery = update.gunnery;
   if (update.piloting !== undefined) next.piloting = update.piloting;
@@ -399,6 +421,7 @@ function normGator(value: unknown): GatorState {
     other: Math.round(num(raw.other, 0)),
     useHeat: bool(raw.useHeat, true),
     usePilotHits: bool(raw.usePilotHits, true),
+    usePilotingDamage: bool(raw.usePilotingDamage, true),
   };
 }
 
@@ -417,6 +440,59 @@ function normCustomStats(value: unknown): CustomStat[] {
       },
     ];
   });
+}
+
+/**
+ * Older saves can contain an empty location list while the aggregate totals
+ * are still populated. Rebuild just the missing pool so the card does not show
+ * every location at 0/0 (which would also discard the aggregate totals on the
+ * next edit).
+ */
+function fillMissingLocationPool(
+  locations: BtLocations,
+  pool: 'armor' | 'structure',
+  source: Track,
+): void {
+  const hasLimits = BT_LOCATION_IDS.some((id) => locations[id][pool].max > 0);
+  if (hasLimits || source.max <= 0) return;
+
+  const derived = createBtLocations(
+    pool === 'armor' ? source.max : 0,
+    pool === 'structure' ? source.max : 0,
+    pool === 'armor' ? source.current : 0,
+    pool === 'structure' ? source.current : 0,
+  );
+  for (const id of BT_LOCATION_IDS) {
+    locations[id][pool] = derived[id][pool];
+  }
+}
+
+function normBtLocations(
+  value: unknown,
+  armor: Track,
+  structure: Track,
+): BtLocations {
+  const raw = record(value);
+  const hasLocations = BT_LOCATION_IDS.some((id) => raw[id] !== undefined);
+  if (!hasLocations) {
+    return createBtLocations(armor.max, structure.max, armor.current, structure.current);
+  }
+  const locations = {} as BtLocations;
+  for (const id of BT_LOCATION_IDS) {
+    const entry = record(raw[id]);
+    const locationArmor = normTrack(entry.armor, 0);
+    const locationStructure = normTrack(entry.structure, 0);
+    locations[id] = {
+      armor: locationArmor,
+      structure: locationStructure,
+      destroyed:
+        bool(entry.destroyed) ||
+        (locationStructure.max > 0 && locationStructure.current <= 0),
+    };
+  }
+  fillMissingLocationPool(locations, 'armor', armor);
+  fillMissingLocationPool(locations, 'structure', structure);
+  return locations;
 }
 
 function normConditions(value: unknown): ConditionInstance[] {
@@ -483,6 +559,8 @@ function normSystem(value: unknown): SystemId {
 export function normalizeCombatant(value: unknown, remapIds = false): Combatant {
   const raw = record(value);
   const role = normRole(raw.role);
+  const armor = normTrack(raw.armor, 0);
+  const structure = normTrack(raw.structure, 0);
   return {
     id: remapIds || !str(raw.id) ? uid('c') : str(raw.id),
     name: str(raw.name, 'Combatant').slice(0, 120) || 'Combatant',
@@ -506,8 +584,9 @@ export function normalizeCombatant(value: unknown, remapIds = false): Combatant 
       successes: Math.max(0, Math.min(3, Math.round(num(record(raw.deathSaves).successes, 0)))),
       failures: Math.max(0, Math.min(3, Math.round(num(record(raw.deathSaves).failures, 0)))),
     },
-    armor: normTrack(raw.armor, 0),
-    structure: normTrack(raw.structure, 0),
+    armor,
+    structure,
+    locations: normBtLocations(raw.locations, armor, structure),
     heat: Math.max(0, Math.round(num(raw.heat, 0))),
     pilotHits: Math.max(0, Math.min(6, Math.round(num(raw.pilotHits, 0)))),
     gunnery: Math.max(0, Math.round(num(raw.gunnery, 4))),

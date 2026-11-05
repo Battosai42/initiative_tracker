@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createCombatant, track } from '../src/lib/factory';
+import { createBtLocations } from '../src/lib/mech';
 import {
   adjustTrack,
   applyRegeneration,
@@ -85,7 +86,14 @@ describe('HP regeneration', () => {
 
 describe('Battletech damage', () => {
   it('strips armor, then structure, then marks the unit destroyed', () => {
-    const mech = createCombatant({ armor: track(10, 10), structure: track(5, 5) });
+    const mech = createCombatant({
+      armor: track(10, 10),
+      structure: track(5, 5),
+      locations: {
+        ...createBtLocations(),
+        centerTorso: { armor: track(10, 10), structure: track(5, 5), destroyed: false },
+      },
+    });
     const hit = damageCombatant(mech, 'battletech', 12);
     expect(hit.armor.current).toBe(0);
     expect(hit.structure.current).toBe(3);

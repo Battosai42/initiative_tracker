@@ -108,8 +108,8 @@ export function AddCombatant() {
   const [hpMax, setHpMax] = useState('10');
   const [secondaryMax, setSecondaryMax] = useState('10');
   const [resolve, setResolve] = useState('3');
-  const [armor, setArmor] = useState('10');
-  const [structure, setStructure] = useState('5');
+  const [armor, setArmor] = useState('40');
+  const [structure, setStructure] = useState('20');
   const [gunnery, setGunnery] = useState('4');
   const [piloting, setPiloting] = useState('5');
   const [ac, setAc] = useState('10');
@@ -157,8 +157,8 @@ export function AddCombatant() {
       setSecondaryMax('5');
     }
     if (isBt) {
-      setArmor('10');
-      setStructure('5');
+      setArmor('40');
+      setStructure('20');
       setGunnery('4');
       setPiloting('5');
       setSide((current) => (current === 'Players' || !current ? 'OpFor' : current));
@@ -563,23 +563,25 @@ export function AddCombatant() {
                 </datalist>
               </div>
               <div className="field">
-                <label htmlFor="add-armor">Armor</label>
+                <label htmlFor="add-armor">Armor (total)</label>
                 <input
                   id="add-armor"
                   type="number"
                   min={0}
                   value={armor}
                   onChange={(event) => setArmor(event.target.value)}
+                  title="Total armor, split across the mech's hit locations. Edit each location's limit on the card."
                 />
               </div>
               <div className="field">
-                <label htmlFor="add-structure">Structure</label>
+                <label htmlFor="add-structure">Structure (total)</label>
                 <input
                   id="add-structure"
                   type="number"
                   min={0}
                   value={structure}
                   onChange={(event) => setStructure(event.target.value)}
+                  title="Total internal structure, split across the mech's hit locations."
                 />
               </div>
               <div className="field">

@@ -1658,6 +1658,250 @@ button.disposition-tag:hover {
   color: var(--warn);
 }
 
+/* BattleTech heat bar and per-location damage grid                    */
+
+.heat-track {
+  margin-top: 10px;
+}
+
+.heat-track .bar-fill {
+  background: var(--armor);
+}
+
+.heat-track.heat-warn .bar-fill {
+  background: var(--warn);
+}
+
+.heat-track.heat-critical .bar-fill {
+  background: var(--bad);
+}
+
+.heat-flag {
+  margin-left: 4px;
+  color: var(--warn);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.mech-panel {
+  margin-top: 10px;
+}
+
+.mech-locations {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
+  gap: 8px;
+}
+
+.mech-location {
+  padding: 7px 8px 6px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg-soft);
+}
+
+.mech-location.is-destroyed {
+  opacity: 0.55;
+  border-color: color-mix(in srgb, var(--bad) 45%, var(--line));
+}
+
+.mech-location-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.mech-location-name {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.mech-location-status {
+  font-family: ui-monospace, monospace;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--muted-2);
+}
+
+.mech-location.is-destroyed .mech-location-status {
+  color: var(--bad);
+  text-transform: uppercase;
+}
+
+.mech-pool {
+  margin-top: 5px;
+}
+
+.mech-pool-head {
+  display: grid;
+  grid-template-columns: 58px 1fr;
+  align-items: center;
+  gap: 6px;
+  font-size: 9px;
+  color: var(--muted);
+}
+
+.mech-pool-numbers {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+  white-space: nowrap;
+  justify-self: end;
+}
+
+.mech-pool-input {
+  width: 42px;
+  padding: 1px 4px;
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: right;
+}
+
+.mech-pool-max {
+  font-family: ui-monospace, monospace;
+  font-size: 9px;
+  color: var(--muted-2);
+}
+
+.bar-thin {
+  height: 5px;
+  margin-top: 2px;
+}
+
+.mech-pool-armor .bar-fill {
+  background: var(--armor);
+}
+
+.mech-pool-structure .bar-fill {
+  background: var(--structure);
+}
+
+.mech-location-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 6px;
+}
+
+.mech-location-actions .track-delta {
+  width: 46px;
+  padding: 2px 5px;
+  font-size: 11px;
+}
+
+/* Limits sidebar sits left of the per-location armor/structure cards.
+   Stretch both columns to the same height. */
+.mech-limit-panel {
+  display: flex;
+  gap: 12px;
+  align-items: stretch;
+}
+
+.mech-limits {
+  flex: 0 0 auto;
+  max-width: 232px;
+  padding: 8px 8px 6px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--bg) 70%, transparent);
+}
+
+/* The damage cards fill the remaining width next to the limits sidebar. */
+.mech-limit-panel .mech-panel {
+  flex: 1 1 auto;
+  margin-top: 0;
+}
+
+@media (max-width: 720px) {
+  .mech-limit-panel {
+    flex-direction: column;
+  }
+
+  .mech-limits {
+    width: auto;
+  }
+}
+
+.mech-limits-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 10px;
+  flex-wrap: wrap;
+  margin-bottom: 7px;
+}
+
+.mech-limits-title {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.mech-limits-hint {
+  font-size: 10px;
+  color: var(--muted-2);
+}
+
+.mech-limits-grid {
+  display: grid;
+  gap: 5px;
+}
+
+.mech-limit-row {
+  display: grid;
+  grid-template-columns: 116px auto auto;
+  align-items: center;
+  gap: 6px;
+}
+
+.mech-limit-name {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.mech-limit-short {
+  font-family: ui-monospace, monospace;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--muted-2);
+}
+
+.mech-limit-column {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--muted);
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.mech-limit-head .mech-limit-name {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.mech-limit-input {
+  width: 42px;
+  padding: 2px 4px;
+  font-size: 11px;
+  text-align: right;
+}
+
 /* ------------------------------------------------------------------ */
 /* Armor class (D&D AC, Starfinder EAC/KAC)                           */
 /* ------------------------------------------------------------------ */
@@ -1903,9 +2147,21 @@ button.disposition-tag:hover {
 }
 
 /* GATOR calculator on BattleTech cards */
+.gator-results {
+  display: inline-flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
 .gator-result {
   font-size: 11px;
   color: var(--muted);
+}
+
+.gator-piloting-result strong {
+  color: var(--text);
 }
 
 .gator-result strong {
@@ -2060,6 +2316,14 @@ button.disposition-tag:hover {
   padding-top: 7px;
   border-top: 1px dashed var(--line);
   font-size: 10px;
+  color: var(--muted);
+}
+
+.gator-breakdown-label {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
   color: var(--muted);
 }
 

@@ -97,12 +97,23 @@ npm run test:watch
 
 - D&D and generic systems subtract damage from temporary HP first, then current HP.
 - Starfinder 1e drains Stamina before HP.
-- Battletech strips armor before internal structure; zero structure marks the unit destroyed.
+- Battletech tracks armor and internal structure separately for every hit location (head, torsos,
+  arms and legs). Damage drains that location's armor first, then its structure. Once a segment's
+  structure is gone, excess damage transfers inward (limb → side torso → center torso), and losing a
+  side torso also blows off the arm on that side. Destroying the head or center torso destroys the
+  unit. The heat bar fills toward the 0–30 heat scale and flags the shutdown check at 14+.
 - Shadowrun's Physical and Stun monitors are adjusted independently with the field on each track.
 
 Use the `±` field beside a track to change it: type a negative number (e.g. `-5`) to damage or a
-positive number (e.g. `5`) to heal, then press **Enter**. Expand a card to apply a custom amount,
-edit notes, set temporary HP/Resolve, adjust heat and pilot hits, and add conditions.
+positive number (e.g. `5`) to heal, then press **Enter**. On a Battletech card, expand the card to
+see the hit-location grid below the notes. Each location's armor and structure current value can be
+set directly, or the location's `±` field can apply damage with the usual transfer rules. The
+**Custom** controls can target a location from the dropdown. Expanding a card also lets you apply a
+custom amount, edit notes, set temporary HP/Resolve, adjust heat and pilot hits, edit the
+armor/structure limits for each location, use the GATOR calculator, and add conditions. Limits are
+edited per mirrored pair (head, center torso, side torsos, arms, legs) because a 'Mech's left and
+right sides always share the same maximum. GATOR shows the weapon **Attack DC** (Gunnery-based) and
+a separate **Piloting DC** for piloting skill checks.
 
 ### Saved data and moving between browsers
 

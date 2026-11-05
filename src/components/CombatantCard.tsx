@@ -1,12 +1,19 @@
 import { useEffect, useState } from 'react';
-import type { Combatant, CustomStat } from '../types';
+import type { BtLocationId, Combatant, CustomStat } from '../types';
 import { useStore } from '../state/store';
 import { healthState } from '../lib/hp';
 import { activeSide as battletechActiveSide } from '../lib/battletech';
+import {
+  BT_HEAT_SHUTDOWN,
+  BT_LOCATION_IDS,
+  BT_LOCATION_INFO,
+  repairBtDamage,
+} from '../lib/mech';
 import { TrackRow } from './TrackRow';
 import { ConditionEditor } from './ConditionEditor';
 import { CommitNumberInput } from './CommitNumberInput';
 import { GatorCalculator } from './GatorCalculator';
+import { HeatBar, MechDamagePanel, MechLimitsEditor } from './MechDamagePanel';
 import { SAVE_KEYS, SAVE_INFO } from '../data/saves';
 import { gatorBreakdown } from '../lib/gator';
 
@@ -244,6 +251,10 @@ export function CombatantCard({ combatant }: { combatant: Combatant }) {
     rollInitiativeFor,
     damage,
     heal,
+    damageLocation,
+    healLocation,
+    setLocationMax,
+    setLocationCurrent,
     adjustPool,
     setPool,
     setTempHp,
@@ -263,6 +274,7 @@ export function CombatantCard({ combatant }: { combatant: Combatant }) {
   const [sideDraft, setSideDraft] = useState(combatant.side);
   const [customAmount, setCustomAmount] = useState('');
   const [monitor, setMonitor] = useState<'hp' | 'secondary'>('hp');
+  const [btLocation, setBtLocation] = useState<BtLocationId>('centerTorso');
 
   const isBt = system.showBattletech;
   const isActive = activeCombatant?.id === combatant.id;
@@ -344,7 +356,7 @@ export function CombatantCard({ combatant }: { combatant: Combatant }) {
     const amount = Math.max(1, Math.abs(Number.parseInt(customAmount, 10)) || 5);
     if (sign === -1) {
       if (isBt) {
-        damage(combatant.id, amount);
+        damageLocation(combatant.id, btLocation, amount);
       } else if (system.id === 'shadowrun') {
         adjustPool(combatant.id, monitor, -amount);
       } else {
@@ -354,21 +366,7 @@ export function CombatantCard({ combatant }: { combatant: Combatant }) {
     }
 
     if (isBt) {
-      updateCombatant(combatant.id, (current) => {
-        const armorGain = Math.min(current.armor.max - current.armor.current, amount);
-        const structureGain = Math.min(
-          current.structure.max - current.structure.current,
-          amount - armorGain,
-        );
-        return {
-          ...current,
-          armor: { ...current.armor, current: current.armor.current + armorGain },
-          structure: {
-            ...current.structure,
-            current: current.structure.current + structureGain,
-          },
-        };
-      });
+      healLocation(combatant.id, btLocation, amount);
     } else if (system.id === 'shadowrun') {
       adjustPool(combatant.id, monitor, amount);
     } else {
@@ -387,12 +385,12 @@ export function CombatantCard({ combatant }: { combatant: Combatant }) {
   };
 
   const restoreAll = () => {
+    if (isBt) {
+      updateCombatant(combatant.id, repairBtDamage);
+      return;
+    }
     setPool(combatant.id, 'hp', combatant.hp.max);
     if (showSecondary) setPool(combatant.id, 'secondary', combatant.secondary.max);
-    if (isBt) {
-      setPool(combatant.id, 'armor', combatant.armor.max);
-      setPool(combatant.id, 'structure', combatant.structure.max);
-    }
   };
 
   const classes = ['combatant'];
@@ -403,7 +401,7 @@ export function CombatantCard({ combatant }: { combatant: Combatant }) {
   classes.push(`role-${combatant.role}`);
   classes.push(`disposition-${combatant.disposition}`);
 
-  const heatWarning = combatant.heat >= 14;
+  const heatWarning = combatant.heat >= BT_HEAT_SHUTDOWN;
 
   return (
     <article className={classes.join(' ')} aria-label={`${combatant.name}, ${ROLE_LABELS[combatant.role]}`}>
@@ -567,27 +565,23 @@ export function CombatantCard({ combatant }: { combatant: Combatant }) {
           <>
             <div className="track-pair">
               <TrackRow
-                label="Armor"
+                label="Armor (total)"
                 track={combatant.armor}
                 tone="armor"
-                onDamage={(amount) => damage(combatant.id, amount)}
-                onHeal={(amount) => adjustPool(combatant.id, 'armor', amount)}
-                hint="Damage is absorbed by armor before internal structure."
+                hint="Total armor remaining across every location. Expand the card to edit the locations."
               />
               <TrackRow
-                label="Structure"
+                label="Structure (total)"
                 track={combatant.structure}
                 tone="structure"
-                onDamage={(amount) => adjustPool(combatant.id, 'structure', -amount)}
-                onHeal={(amount) => adjustPool(combatant.id, 'structure', amount)}
-                hint="At zero structure the unit is destroyed."
+                hint="Total internal structure remaining. Destroying the head or center torso destroys the unit. Expand the card to edit the locations."
               />
             </div>
+            <HeatBar
+              heat={combatant.heat}
+              onChange={(heat) => setHeat(combatant.id, heat)}
+            />
             <div className="bt-summary">
-              <span className={`bt-stat ${heatWarning ? 'warn' : ''}`}>
-                Heat <strong>{combatant.heat}</strong>
-                {heatWarning ? <em> shutdown check</em> : null}
-              </span>
               <span className={`bt-stat ${combatant.pilotHits >= 3 ? 'warn' : ''}`}>
                 Pilot <strong>{combatant.pilotHits}</strong>/6
               </span>
@@ -810,6 +804,22 @@ export function CombatantCard({ combatant }: { combatant: Combatant }) {
                   placeholder="5"
                   aria-label="Custom amount"
                 />
+                {isBt ? (
+                  <select
+                    className="select small-select"
+                    value={btLocation}
+                    onChange={(event) =>
+                      setBtLocation(event.target.value as BtLocationId)
+                    }
+                    aria-label="Hit location"
+                  >
+                    {BT_LOCATION_IDS.map((id) => (
+                      <option key={id} value={id}>
+                        {BT_LOCATION_INFO[id].label}
+                      </option>
+                    ))}
+                  </select>
+                ) : null}
                 {system.id === 'shadowrun' ? (
                   <select
                     className="select small-select"
@@ -988,6 +998,37 @@ export function CombatantCard({ combatant }: { combatant: Combatant }) {
               ) : null}
             </div>
           </div>
+
+          {isBt ? (
+            <div className="expanded-section">
+              <div className="section-head">
+                <h4>Hit locations</h4>
+                <span className="muted">
+                  Set armor/structure directly, or use ± to apply damage with transfer.
+                </span>
+              </div>
+              <div className="mech-limit-panel">
+                <MechLimitsEditor
+                  combatant={combatant}
+                  onMaxChange={(locationIds, pool, max) =>
+                    setLocationMax(combatant.id, locationIds, pool, max)
+                  }
+                />
+                <MechDamagePanel
+                  combatant={combatant}
+                  onDamage={(location, amount) =>
+                    damageLocation(combatant.id, location, amount)
+                  }
+                  onHeal={(location, amount) =>
+                    healLocation(combatant.id, location, amount)
+                  }
+                  onSetCurrent={(location, pool, current) =>
+                    setLocationCurrent(combatant.id, location, pool, current)
+                  }
+                />
+              </div>
+            </div>
+          ) : null}
 
           {isBt ? <GatorCalculator combatant={combatant} /> : null}
 

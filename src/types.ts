@@ -45,6 +45,27 @@ export type BtTargetMovement = '0-2' | '3-4' | '5-6' | '7-9' | '10-17' | '18-24'
 /** BattleTech range brackets and their to-hit modifiers. */
 export type BtRange = 'short' | 'medium' | 'long' | 'extreme';
 
+/** The standard BattleTech 'Mech hit locations. */
+export type BtLocationId =
+  | 'head'
+  | 'centerTorso'
+  | 'leftTorso'
+  | 'rightTorso'
+  | 'leftArm'
+  | 'rightArm'
+  | 'leftLeg'
+  | 'rightLeg';
+
+/** One hit location's armor and internal structure. */
+export interface BtLocation {
+  armor: Track;
+  structure: Track;
+  /** True once the location has been destroyed or blown off. */
+  destroyed: boolean;
+}
+
+export type BtLocations = Record<BtLocationId, BtLocation>;
+
 /**
  * The GATOR selections for one BattleTech attack. These are per-combatant and
  * reset only when the player changes them; they are not copied into templates.
@@ -61,6 +82,11 @@ export interface GatorState {
   useHeat: boolean;
   /** Include one modifier per pilot hit in the total. */
   usePilotHits: boolean;
+  /**
+   * Include the Piloting Skill Roll damage modifier (+1 per 20 points of
+   * damage taken) in the piloting check total.
+   */
+  usePilotingDamage: boolean;
 }
 
 /**
@@ -140,6 +166,8 @@ export interface Combatant {
   /** Battletech */
   armor: Track;
   structure: Track;
+  /** Battletech: armor and internal structure for every hit location. */
+  locations: BtLocations;
   heat: number;
   pilotHits: number;
   /** Battletech: base Gunnery and Piloting skills. */
