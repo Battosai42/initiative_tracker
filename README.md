@@ -19,8 +19,9 @@ Built for **D&D 5e**, **Starfinder 1e**, **Starfinder 2e / Pathfinder 2e**, **Sh
 - Per-system trackers:
   - **D&D 5e** — HP, temporary HP, death saves, conditions, Armor Class (AC), and saving throw
     modifiers for Str, Dex, Con, Int, Wis, and Cha.
-  - **Starfinder 1e** — Stamina absorbs damage before HP, plus Resolve Points, EAC, KAC, DR, SR, saving throws, and monster HP regeneration.
-  - **Starfinder 2e / PF2e** — HP, Fort/Reflex/Con saving throw modifiers, and PF2e-style
+  - **Starfinder 1e** — separate HP and Stamina tracks, plus Resolve Points, EAC, KAC, DR, SR,
+    saving throws, and monster HP regeneration.
+  - **Starfinder 2e / PF2e** — HP, Fort/Reflex/Will saving throw modifiers, and PF2e-style
     conditions.
   - **Shadowrun** — separate Physical and Stun monitors with initiative passes.
   - **Battletech** — armor before structure, heat, pilot hits, and side-based activation.
@@ -96,7 +97,9 @@ npm run test:watch
 ### Damage
 
 - D&D and generic systems subtract damage from temporary HP first, then current HP.
-- Starfinder 1e drains Stamina before HP.
+- Starfinder 1e tracks HP and Stamina separately. The HP track changes HP directly, while damage
+  entered on the Stamina track (or through the custom damage field) drains Stamina first and
+  spills any excess over to HP.
 - Battletech tracks armor and internal structure separately for every hit location (head, torsos,
   arms and legs). Damage drains that location's armor first, then its structure. Once a segment's
   structure is gone, excess damage transfers inward (limb → side torso → center torso), and losing a

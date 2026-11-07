@@ -126,6 +126,7 @@ export interface CombatantTemplate {
   sr: number;
   fort: number;
   reflex: number;
+  /** Starfinder: Will saving throw modifier (stored as `con` for compatibility). */
   con: number;
   regen: number;
   /** Starfinder: Combatant Rating (a monster's challenge rating). */
@@ -188,6 +189,7 @@ export interface Combatant {
   sr: number;
   fort: number;
   reflex: number;
+  /** Starfinder: Will saving throw modifier (stored as `con` for compatibility). */
   con: number;
   /** Starfinder: monsters heal this much HP at the start of their turn. */
   regen: number;

@@ -384,8 +384,13 @@ p {
   cursor: pointer;
 }
 
-.menu button:hover {
+.menu button:hover:not(:disabled) {
   background: var(--bg-soft);
+}
+
+.menu button:disabled {
+  opacity: 0.45;
+  cursor: default;
 }
 
 .menu button.danger {

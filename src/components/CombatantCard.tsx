@@ -383,8 +383,13 @@ export function CombatantCard({ combatant }: { combatant: Combatant }) {
   };
 
   const primaryDamage = (amount: number) => {
-    if (system.id === 'shadowrun') adjustPool(combatant.id, 'hp', -amount);
-    else damage(combatant.id, amount);
+    // Starfinder's HP row damages HP directly. The custom damage field below
+    // still routes through `damage`, which drains Stamina first.
+    if (system.id === 'shadowrun' || system.id === 'starfinder1e') {
+      adjustPool(combatant.id, 'hp', -amount);
+    } else {
+      damage(combatant.id, amount);
+    }
   };
 
   const primaryHeal = (amount: number) => {
@@ -679,9 +684,10 @@ export function CombatantCard({ combatant }: { combatant: Combatant }) {
                       onChange={(next) => updateCombatant(combatant.id, { reflex: next })}
                     />
                     <AcStat
-                      label="Con"
+                      label="Will"
                       value={combatant.con}
                       min={-99}
+                      title="Will saving throw"
                       onChange={(next) => updateCombatant(combatant.id, { con: next })}
                     />
                     <AcStat
@@ -733,10 +739,10 @@ export function CombatantCard({ combatant }: { combatant: Combatant }) {
                       onChange={(next) => updateCombatant(combatant.id, { reflex: next })}
                     />
                     <AcStat
-                      label="Con"
+                      label="Will"
                       value={combatant.con}
                       min={-99}
-                      title="Constitution saving throw"
+                      title="Will saving throw"
                       onChange={(next) => updateCombatant(combatant.id, { con: next })}
                     />
                     <AcStat
@@ -766,7 +772,7 @@ export function CombatantCard({ combatant }: { combatant: Combatant }) {
               onHeal={primaryHeal}
               hint={
                 system.id === 'starfinder1e'
-                  ? 'Damage drains Stamina before HP.'
+                  ? 'HP damage applies directly without draining Stamina.'
                   : system.id === 'shadowrun'
                     ? 'Physical condition monitor.'
                     : undefined
@@ -777,11 +783,15 @@ export function CombatantCard({ combatant }: { combatant: Combatant }) {
                 label={secondaryLabel}
                 track={combatant.secondary}
                 tone="secondary"
-                onDamage={(amount) => adjustPool(combatant.id, 'secondary', -amount)}
+                onDamage={(amount) =>
+                  system.id === 'starfinder1e'
+                    ? damage(combatant.id, amount)
+                    : adjustPool(combatant.id, 'secondary', -amount)
+                }
                 onHeal={(amount) => adjustPool(combatant.id, 'secondary', amount)}
                 hint={
                   system.id === 'starfinder1e'
-                    ? 'Stamina absorbs damage before HP.'
+                    ? 'Damage drains Stamina, then spills over to HP.'
                     : system.id === 'shadowrun'
                       ? 'Stun condition monitor.'
                       : undefined

@@ -35,6 +35,8 @@ export function Header({ onOpenDice }: HeaderProps) {
     importPcs,
     resetAll,
     resetEncounter,
+    rollAllInitiatives,
+    rollBtSides,
     notify,
     templates,
   } = useStore();
@@ -137,6 +139,8 @@ export function Header({ onOpenDice }: HeaderProps) {
   };
 
   const isDark = data.settings.theme === 'dark';
+  const isBt = system.id === 'battletech';
+  const hasCombatants = encounter.combatants.length > 0;
 
   return (
     <header className="topbar">
@@ -217,6 +221,19 @@ export function Header({ onOpenDice }: HeaderProps) {
                 }}
               >
                 Duplicate encounter
+              </button>
+              <button
+                role="menuitem"
+                onClick={() => {
+                  (isBt ? rollBtSides : rollAllInitiatives)();
+                  setMenuOpen(false);
+                }}
+                disabled={!hasCombatants}
+                title={
+                  isBt ? 'Roll 2d6 for every side' : 'Roll initiative for every combatant'
+                }
+              >
+                {isBt ? 'Roll side initiative' : 'Roll all initiative'}
               </button>
               <div className="menu-sep" />
               <button

@@ -748,13 +748,13 @@ export function AddCombatant() {
                     />
                   </div>
                   <div className="field">
-                    <label htmlFor="add-con">Con</label>
+                    <label htmlFor="add-will">Will</label>
                     <input
-                      id="add-con"
+                      id="add-will"
                       type="number"
                       value={con}
                       onChange={(event) => setCon(event.target.value)}
-                      title="Constitution save"
+                      title="Will save"
                     />
                   </div>
                   <div className="field">
@@ -871,13 +871,13 @@ export function AddCombatant() {
                     />
                   </div>
                   <div className="field">
-                    <label htmlFor="add-con">Con</label>
+                    <label htmlFor="add-will">Will</label>
                     <input
-                      id="add-con"
+                      id="add-will"
                       type="number"
                       value={con}
                       onChange={(event) => setCon(event.target.value)}
-                      title="Constitution save"
+                      title="Will save"
                     />
                   </div>
                   {role === 'monster' ? (

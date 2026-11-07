@@ -13,8 +13,6 @@ export function TurnBar() {
     activeCombatant,
     previous,
     next,
-    rollAllInitiatives,
-    rollBtSides,
     nextBtSide,
   } = useStore();
 
@@ -94,16 +92,6 @@ export function TurnBar() {
         >
           <span className="btn-label">{isBt ? 'Next side' : 'Next turn'}</span>
           <span aria-hidden="true">→</span>
-        </button>
-        <button
-          className="btn"
-          onClick={isBt ? rollBtSides : rollAllInitiatives}
-          disabled={!hasCombatants}
-          title={isBt ? 'Roll 2d6 for every side' : 'Roll initiative for every combatant'}
-          aria-label={isBt ? 'Roll sides' : 'Roll all'}
-        >
-          <span aria-hidden="true">↻</span>
-          <span className="btn-label">{isBt ? 'Roll sides' : 'Roll all'}</span>
         </button>
       </div>
     </section>
